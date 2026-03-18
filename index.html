@@ -257,6 +257,9 @@ tbody tr:hover td{background:var(--bg3);}
     <button class="login-btn" id="login-btn" onclick="doLogin()">Ingresar</button>
     <div class="login-error" id="login-error"></div>
     <div class="login-hint" id="login-hint"></div>
+    <div style="text-align:center;margin-top:10px;">
+      <button onclick="reconfigurar()" style="background:none;border:none;color:var(--text3);font-size:11px;cursor:pointer;font-family:'Sora',sans-serif;">⚙ Cambiar URL del script</button>
+    </div>
   </div>
 </div>
 
@@ -693,18 +696,23 @@ function setSync(s, msg) {
 async function apiGet(params={}) {
   params.token = session.token;
   const q = Object.entries(params).map(([k,v])=>`${k}=${encodeURIComponent(v)}`).join('&');
-  const r = await fetch(apiUrl+'?'+q);
-  return r.json();
+  const r = await fetch(apiUrl+'?'+q, { redirect:'follow' });
+  const text = await r.text();
+  try { return JSON.parse(text); }
+  catch(e) { throw new Error('Respuesta inválida del servidor: '+text.slice(0,120)); }
 }
 
 async function apiPost(body={}) {
   body.token = session.token;
   const r = await fetch(apiUrl, {
-    method:'POST', mode:'cors',
-    headers:{'Content-Type':'application/json'},
+    method:'POST',
+    redirect:'follow',
+    headers:{'Content-Type':'text/plain;charset=utf-8'},
     body: JSON.stringify(body)
   });
-  return r.json();
+  const text = await r.text();
+  try { return JSON.parse(text); }
+  catch(e) { throw new Error('Respuesta inválida del servidor: '+text.slice(0,120)); }
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -737,10 +745,17 @@ async function doLogin() {
       errEl.style.display = 'block';
     }
   } catch(e) {
-    errEl.textContent = 'No se pudo conectar al servidor. Verifique la URL del script.';
+    errEl.textContent = 'Error de conexión: '+e.message+'. Verifique la URL del script en ⚙ Reconfigurar.';
     errEl.style.display = 'block';
   }
   btn.disabled=false; btn.textContent='Ingresar';
+}
+
+function reconfigurar() {
+  if(!confirm('¿Cambiar la URL del script de Google?\n\nSus datos en Google Sheets no se borran.')) return;
+  localStorage.removeItem('tk_api_url');
+  localStorage.removeItem('tk_session');
+  location.reload();
 }
 
 function doLogout() {
@@ -770,15 +785,29 @@ async function cambiarPassword() {
 // ═══════════════════════════════════════════════════════════
 // SETUP URL
 // ═══════════════════════════════════════════════════════════
-function guardarUrl() {
+async function guardarUrl() {
   const url = document.getElementById('setup-url').value.trim();
   const errEl = document.getElementById('setup-error');
+  const btn = document.getElementById('setup-btn');
   if(!url||!url.includes('script.google.com')){
     errEl.textContent='Pegue la URL completa del script (debe contener script.google.com).';
     errEl.style.display='block'; return;
   }
+  errEl.style.display='none';
+  btn.disabled=true; btn.textContent='Verificando…';
+  try {
+    const r = await fetch(url+'?action=ping', { redirect:'follow' });
+    const text = await r.text();
+    const json = JSON.parse(text);
+    if(!json.ok) throw new Error(json.error||'El script respondió con error.');
+  } catch(e) {
+    btn.disabled=false; btn.textContent='Guardar y continuar';
+    errEl.textContent='No se pudo conectar: '+e.message+'. Verifique que la URL es correcta y que el acceso es "Cualquier persona".';
+    errEl.style.display='block'; return;
+  }
   apiUrl = url;
   localStorage.setItem('tk_api_url', url);
+  btn.disabled=false; btn.textContent='Guardar y continuar';
   document.getElementById('setup-screen').style.display='none';
   document.getElementById('login-screen').style.display='flex';
   document.getElementById('login-hint').textContent='Usuario: admin · Contraseña: tecnokeko2024';
