@@ -1,0 +1,1508 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="TecnoKeko">
+<link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%236355e0'/><text y='.9em' font-size='80' x='10'>⚡</text></svg>">
+<title>TecnoKeko</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0a0a0f;--bg2:#111118;--bg3:#18181f;--bg4:#1e1e28;
+  --border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.13);
+  --text:#f0f0f8;--text2:#8888aa;--text3:#44445a;
+  --accent:#7c6af7;--accent2:#6355e0;--accent-glow:rgba(124,106,247,0.15);
+  --green:#3ddc84;--green-bg:rgba(61,220,132,0.1);
+  --red:#ff5f57;--red-bg:rgba(255,95,87,0.1);
+  --amber:#ffbe3d;--amber-bg:rgba(255,190,61,0.1);
+  --blue:#4fc3f7;--blue-bg:rgba(79,195,247,0.1);
+  --teal:#2dd4bf;--teal-bg:rgba(45,212,191,0.1);
+  --radius:8px;--radius-lg:14px;--shadow:0 4px 20px rgba(0,0,0,0.5);--shadow-lg:0 12px 40px rgba(0,0,0,0.6);
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Sora',sans-serif;font-size:14px;line-height:1.6;-webkit-tap-highlight-color:transparent;}
+
+/* ── LAYOUT ── */
+.app{display:flex;min-height:100vh;}
+.sidebar{width:230px;background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:100;transition:transform .25s cubic-bezier(.4,0,.2,1);}
+.sidebar-logo{padding:20px 18px 16px;border-bottom:1px solid var(--border);}
+.logo-wrap{display:flex;align-items:center;gap:10px;}
+.logo-icon{width:36px;height:36px;background:linear-gradient(135deg,var(--accent),#a78bfa);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;}
+.logo-name{font-size:19px;font-weight:700;letter-spacing:-.5px;}
+.logo-sub{font-size:9px;color:var(--text3);font-family:'JetBrains Mono',monospace;letter-spacing:.1em;margin-top:1px;}
+.sidebar-nav{flex:1;padding:12px 10px;overflow-y:auto;}
+.nav-group{font-size:9px;font-weight:700;color:var(--text3);letter-spacing:.12em;text-transform:uppercase;padding:10px 10px 4px;}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:var(--radius);cursor:pointer;color:var(--text2);font-size:13px;transition:all .15s;margin-bottom:2px;border:1px solid transparent;user-select:none;}
+.nav-item:hover{background:var(--bg3);color:var(--text);}
+.nav-item.active{background:var(--accent-glow);color:var(--accent);border-color:rgba(124,106,247,.2);font-weight:500;}
+.nav-ic{width:15px;height:15px;flex-shrink:0;opacity:.75;}
+.sidebar-bottom{padding:14px 16px;border-top:1px solid var(--border);}
+.user-chip{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:var(--radius);background:var(--bg3);border:1px solid var(--border);cursor:pointer;transition:background .15s;}
+.user-chip:hover{background:var(--bg4);}
+.user-avatar{width:28px;height:28px;border-radius:50%;background:var(--accent-glow);color:var(--accent);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;}
+.user-name{font-size:12px;font-weight:500;flex:1;}
+.user-logout{font-size:10px;color:var(--text3);}
+
+/* ── MAIN ── */
+.main{margin-left:230px;flex:1;display:flex;flex-direction:column;min-height:100vh;}
+.topbar{background:var(--bg2);border-bottom:1px solid var(--border);padding:13px 24px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50;gap:12px;}
+.page-title{font-size:15px;font-weight:600;}
+.page-sub{font-size:11px;color:var(--text2);margin-top:1px;}
+.topbar-right{display:flex;align-items:center;gap:8px;flex-shrink:0;}
+.content{padding:22px 24px;flex:1;}
+
+/* ── SECTIONS ── */
+.section{display:none;}
+.section.active{display:block;animation:fadeIn .18s ease;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(3px);}to{opacity:1;transform:translateY(0);}}
+
+/* ── METRICS ── */
+.metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:20px;}
+.metric{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-lg);padding:16px 18px;transition:border-color .15s;}
+.metric:hover{border-color:var(--border2);}
+.metric-label{font-size:10px;color:var(--text2);font-weight:600;letter-spacing:.07em;text-transform:uppercase;margin-bottom:7px;}
+.metric-value{font-size:22px;font-weight:700;font-family:'JetBrains Mono',monospace;line-height:1;}
+.metric-value.green{color:var(--green);}
+.metric-value.red{color:var(--red);}
+.metric-value.blue{color:var(--blue);}
+.metric-value.amber{color:var(--amber);}
+.metric-value.purple{color:var(--accent);}
+.metric-sub{font-size:11px;color:var(--text3);margin-top:5px;}
+
+/* ── CARDS ── */
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-lg);margin-bottom:16px;overflow:hidden;}
+.card-header{padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:10px;}
+.card-title{font-size:13px;font-weight:600;}
+.card-body{padding:18px;}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+
+/* ── FORM ── */
+.form-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin-bottom:14px;}
+.fg{display:flex;flex-direction:column;gap:4px;}
+.fg-full{grid-column:1/-1;}
+.flabel{font-size:10px;color:var(--text2);font-weight:600;letter-spacing:.05em;text-transform:uppercase;}
+.fhint{font-size:10px;color:var(--text3);margin-top:2px;}
+input,select,textarea{background:var(--bg3);border:1px solid var(--border2);border-radius:var(--radius);color:var(--text);font-family:'Sora',sans-serif;font-size:13px;padding:9px 11px;width:100%;transition:border-color .15s,box-shadow .15s;outline:none;-webkit-appearance:none;}
+input:focus,select:focus,textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-glow);}
+input::placeholder{color:var(--text3);}
+input[readonly]{opacity:.7;cursor:default;}
+select option{background:var(--bg3);}
+
+/* ── BUTTONS ── */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:var(--radius);border:1px solid var(--border2);background:transparent;color:var(--text);font-family:'Sora',sans-serif;font-size:13px;font-weight:500;cursor:pointer;transition:all .15s;white-space:nowrap;-webkit-appearance:none;}
+.btn:hover{background:var(--bg3);}
+.btn:active{transform:scale(.97);}
+.btn-primary{background:var(--accent2);border-color:var(--accent);color:#fff;}
+.btn-primary:hover{background:var(--accent);}
+.btn-danger{color:var(--red);border-color:rgba(255,95,87,.3);}
+.btn-danger:hover{background:var(--red-bg);}
+.btn-success{background:var(--green-bg);border-color:rgba(61,220,132,.3);color:var(--green);}
+.btn-success:hover{background:rgba(61,220,132,.2);}
+.btn-sm{padding:5px 11px;font-size:12px;}
+.btn-icon{padding:6px;border-radius:6px;}
+
+/* ── TABLE ── */
+.table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;}
+table{width:100%;border-collapse:collapse;font-size:13px;min-width:480px;}
+thead th{text-align:left;padding:9px 13px;font-size:10px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.07em;border-bottom:1px solid var(--border);white-space:nowrap;}
+tbody td{padding:10px 13px;border-bottom:1px solid var(--border);color:var(--text);vertical-align:middle;}
+tbody tr:last-child td{border-bottom:none;}
+tbody tr:hover td{background:var(--bg3);}
+.tr{text-align:right;}.tc{text-align:center;}
+.mono{font-family:'JetBrains Mono',monospace;font-size:12px;}
+
+/* ── BADGES ── */
+.badge{display:inline-flex;align-items:center;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600;}
+.bg-green{background:var(--green-bg);color:var(--green);}
+.bg-red{background:var(--red-bg);color:var(--red);}
+.bg-amber{background:var(--amber-bg);color:var(--amber);}
+.bg-blue{background:var(--blue-bg);color:var(--blue);}
+.bg-purple{background:var(--accent-glow);color:var(--accent);}
+.bg-teal{background:var(--teal-bg);color:var(--teal);}
+.bg-gray{background:var(--bg3);color:var(--text2);border:1px solid var(--border);}
+.tag{display:inline-block;padding:2px 7px;border-radius:4px;font-size:11px;font-weight:500;background:var(--bg4);color:var(--text2);border:1px solid var(--border);}
+
+/* ── ALERTS (toast) ── */
+.toasts{position:fixed;top:16px;right:16px;z-index:9999;display:flex;flex-direction:column;gap:8px;pointer-events:none;}
+.toast{padding:11px 16px;border-radius:var(--radius-lg);font-size:13px;font-weight:500;min-width:260px;max-width:340px;border:1px solid;box-shadow:var(--shadow-lg);animation:toastIn .2s ease;pointer-events:all;}
+@keyframes toastIn{from{opacity:0;transform:translateX(20px);}to{opacity:1;transform:translateX(0);}}
+.toast-success{background:var(--green-bg);color:var(--green);border-color:rgba(61,220,132,.3);}
+.toast-error{background:var(--red-bg);color:var(--red);border-color:rgba(255,95,87,.3);}
+.toast-info{background:var(--accent-glow);color:var(--accent);border-color:rgba(124,106,247,.3);}
+
+/* ── EMPTY ── */
+.empty{text-align:center;padding:36px 20px;color:var(--text3);}
+.empty-icon{font-size:26px;margin-bottom:8px;opacity:.4;}
+
+/* ── PREVIEW BOX ── */
+.preview-box{background:var(--bg3);border:1px solid var(--border2);border-radius:var(--radius);padding:12px 15px;margin-top:10px;display:none;flex-wrap:wrap;gap:16px;}
+.preview-box.show{display:flex;}
+.pi{display:flex;flex-direction:column;gap:2px;}
+.pi-label{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;}
+.pi-value{font-size:15px;font-weight:700;font-family:'JetBrains Mono',monospace;}
+.pi-value.green{color:var(--green);}.pi-value.red{color:var(--red);}.pi-value.blue{color:var(--blue);}.pi-value.amber{color:var(--amber);}.pi-value.purple{color:var(--accent);}.pi-value.teal{color:var(--teal);}
+
+/* ── MINI LIST ── */
+.mini-item{display:flex;justify-content:space-between;align-items:flex-start;padding:9px 0;border-bottom:1px solid var(--border);gap:10px;}
+.mini-item:last-child{border-bottom:none;}
+.mi-name{font-size:13px;font-weight:500;}
+.mi-sub{font-size:11px;color:var(--text2);margin-top:1px;}
+.mi-value{font-size:13px;font-weight:700;font-family:'JetBrains Mono',monospace;text-align:right;white-space:nowrap;}
+
+/* ── PROGRESS ── */
+.pbar{height:5px;background:var(--bg4);border-radius:3px;overflow:hidden;margin-top:5px;}
+.pbar-fill{height:100%;border-radius:3px;transition:width .4s;}
+
+/* ── DIVIDER ── */
+.divider{border:none;border-top:1px solid var(--border);margin:12px 0;}
+
+/* ── ANALYSIS ROW ── */
+.arow{display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid var(--border);font-size:13px;gap:8px;}
+.arow:last-child{border-bottom:none;}
+.arow-label{color:var(--text2);}
+.arow-value{font-weight:700;font-family:'JetBrains Mono',monospace;}
+
+/* ── TABS ── */
+.tabs{display:flex;gap:3px;background:var(--bg3);border-radius:var(--radius);padding:3px;margin-bottom:16px;}
+.tab{flex:1;text-align:center;padding:8px 6px;border-radius:6px;cursor:pointer;font-size:13px;font-weight:500;color:var(--text2);transition:all .15s;user-select:none;}
+.tab.active{background:var(--bg2);color:var(--text);box-shadow:0 1px 4px rgba(0,0,0,.4);}
+
+/* ── MODAL ── */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:300;display:flex;align-items:center;justify-content:center;padding:16px;}
+.modal{background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius-lg);padding:24px;max-width:540px;width:100%;max-height:92vh;overflow-y:auto;box-shadow:var(--shadow-lg);}
+.modal-title{font-size:15px;font-weight:600;margin-bottom:18px;}
+.modal-actions{display:flex;gap:8px;margin-top:18px;justify-content:flex-end;}
+
+/* ── CUOTA ROW ── */
+.cuota-row{display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:var(--radius);background:var(--bg3);border:1px solid var(--border);margin-bottom:5px;}
+.cuota-num{font-size:11px;color:var(--text3);font-family:'JetBrains Mono',monospace;width:48px;flex-shrink:0;}
+.cuota-monto{font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:500;flex:1;}
+
+/* ── SYNC INDICATOR ── */
+.sync-wrap{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-family:'JetBrains Mono',monospace;color:var(--text3);}
+.sync-dot{width:7px;height:7px;border-radius:50%;display:inline-block;flex-shrink:0;transition:background .3s;}
+.sync-dot.syncing{animation:pulse 1s infinite;}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:.2;}}
+
+/* ── LOGIN SCREEN ── */
+.login-screen{position:fixed;inset:0;background:var(--bg);z-index:500;display:flex;align-items:center;justify-content:center;padding:20px;}
+.login-box{background:var(--bg2);border:1px solid var(--border2);border-radius:20px;padding:36px;max-width:380px;width:100%;box-shadow:var(--shadow-lg);}
+.login-logo{text-align:center;margin-bottom:28px;}
+.login-logo-icon{width:56px;height:56px;background:linear-gradient(135deg,var(--accent),#a78bfa);border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:28px;margin:0 auto 10px;}
+.login-logo-name{font-size:22px;font-weight:700;letter-spacing:-.5px;}
+.login-logo-sub{font-size:11px;color:var(--text3);margin-top:2px;font-family:'JetBrains Mono',monospace;}
+.login-btn{width:100%;padding:12px;background:var(--accent2);border:1px solid var(--accent);border-radius:var(--radius);color:#fff;font-family:'Sora',sans-serif;font-size:14px;font-weight:600;cursor:pointer;transition:all .15s;margin-top:6px;}
+.login-btn:hover{background:var(--accent);}
+.login-btn:disabled{opacity:.5;cursor:not-allowed;}
+.login-error{background:var(--red-bg);border:1px solid rgba(255,95,87,.3);border-radius:var(--radius);padding:9px 13px;font-size:12px;color:var(--red);margin-top:10px;display:none;}
+.login-hint{font-size:11px;color:var(--text3);text-align:center;margin-top:14px;line-height:1.5;}
+
+/* ── SETUP URL SCREEN ── */
+.setup-screen{position:fixed;inset:0;background:var(--bg);z-index:400;display:flex;align-items:center;justify-content:center;padding:20px;}
+.setup-box{background:var(--bg2);border:1px solid var(--border2);border-radius:20px;padding:32px;max-width:500px;width:100%;box-shadow:var(--shadow-lg);}
+
+/* ── HAMBURGER ── */
+.hamburger{display:none;background:none;border:1px solid var(--border2);border-radius:var(--radius);color:var(--text);padding:7px 9px;cursor:pointer;font-size:16px;line-height:1;}
+.sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:99;}
+
+/* ── RESPONSIVE ── */
+@media(max-width:768px){
+  .sidebar{transform:translateX(-100%);}
+  .sidebar.open{transform:translateX(0);}
+  .sidebar-overlay.open{display:block;}
+  .main{margin-left:0;}
+  .hamburger{display:flex;align-items:center;justify-content:center;}
+  .content{padding:14px;}
+  .grid-2{grid-template-columns:1fr;}
+  .topbar{padding:11px 14px;}
+  .metrics{grid-template-columns:repeat(2,1fr);}
+  .modal{padding:18px;}
+}
+@media(max-width:420px){
+  .metrics{grid-template-columns:1fr 1fr;}
+  .metric-value{font-size:18px;}
+}
+
+/* SCROLLBAR */
+::-webkit-scrollbar{width:5px;height:5px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:var(--bg4);border-radius:3px;}
+</style>
+</head>
+<body>
+
+<!-- TOASTS -->
+<div class="toasts" id="toasts"></div>
+<div class="sidebar-overlay" id="overlay" onclick="closeSidebar()"></div>
+
+<!-- ══ LOGIN SCREEN ══════════════════════════════════════════ -->
+<div id="login-screen" class="login-screen">
+  <div class="login-box">
+    <div class="login-logo">
+      <div class="login-logo-icon">⚡</div>
+      <div class="login-logo-name">TecnoKeko</div>
+      <div class="login-logo-sub">CONTROL DE VENTAS</div>
+    </div>
+    <div class="fg" style="margin-bottom:12px;">
+      <label class="flabel">Usuario</label>
+      <input type="text" id="login-user" placeholder="admin" autocomplete="username" onkeydown="if(event.key==='Enter')document.getElementById('login-pass').focus()">
+    </div>
+    <div class="fg" style="margin-bottom:4px;">
+      <label class="flabel">Contraseña</label>
+      <input type="password" id="login-pass" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()">
+    </div>
+    <button class="login-btn" id="login-btn" onclick="doLogin()">Ingresar</button>
+    <div class="login-error" id="login-error"></div>
+    <div class="login-hint" id="login-hint"></div>
+  </div>
+</div>
+
+<!-- ══ SETUP URL SCREEN ══════════════════════════════════════ -->
+<div id="setup-screen" class="setup-screen" style="display:none;">
+  <div class="setup-box">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:22px;">
+      <div class="login-logo-icon" style="width:40px;height:40px;font-size:20px;border-radius:11px;">⚡</div>
+      <div><div style="font-size:17px;font-weight:700;">TecnoKeko</div><div style="font-size:10px;color:var(--text3);font-family:'JetBrains Mono',monospace;">CONFIGURACIÓN INICIAL</div></div>
+    </div>
+    <p style="font-size:13px;color:var(--text2);margin-bottom:20px;line-height:1.6;">Para sincronizar datos entre todos sus dispositivos, pegue aquí la URL del script de Google que instaló.</p>
+    <div style="background:var(--bg3);border-radius:var(--radius-lg);padding:14px 16px;margin-bottom:18px;">
+      <div style="font-size:12px;font-weight:600;color:var(--text);margin-bottom:8px;">Si aún no tiene el script instalado:</div>
+      <div style="font-size:12px;color:var(--text2);line-height:1.7;">
+        1. Vaya a <a href="https://sheets.google.com" target="_blank" style="color:var(--accent);">sheets.google.com</a> → cree una hoja <strong style="color:var(--text);">"TecnoKeko Datos"</strong><br>
+        2. <strong style="color:var(--text);">Extensiones → Apps Script</strong> → pegue el contenido del archivo <code style="color:var(--amber);">.gs</code> → guarde<br>
+        3. <strong style="color:var(--text);">Implementar → Nueva implementación → Aplicación web</strong><br>
+        &nbsp;&nbsp;&nbsp;Ejecutar como: Yo · Acceso: Cualquier persona → Implementar<br>
+        4. Copie la URL que termina en <code style="color:var(--amber);">/exec</code>
+      </div>
+    </div>
+    <div class="fg" style="margin-bottom:12px;">
+      <label class="flabel">URL del script (termina en /exec)</label>
+      <input type="text" id="setup-url" placeholder="https://script.google.com/macros/s/XXXX/exec" style="font-size:11px;font-family:'JetBrains Mono',monospace;">
+    </div>
+    <button class="login-btn" id="setup-btn" onclick="guardarUrl()">Guardar y continuar</button>
+    <div class="login-error" id="setup-error"></div>
+  </div>
+</div>
+
+<!-- ══ MODALS ════════════════════════════════════════════════ -->
+<div class="modal-overlay" id="modal-pago" style="display:none;">
+  <div class="modal">
+    <div class="modal-title" id="modal-pago-title">Registrar pago</div>
+    <div id="modal-pago-body"></div>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeModal('modal-pago')">Cancelar</button>
+      <button class="btn btn-primary" onclick="confirmarPago()">Confirmar pago</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-detalle" style="display:none;">
+  <div class="modal" style="max-width:640px;">
+    <div class="modal-title" id="modal-detalle-title">Detalle de venta</div>
+    <div id="modal-detalle-body"></div>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeModal('modal-detalle')">Cerrar</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-impuesto" style="display:none;">
+  <div class="modal" style="max-width:440px;">
+    <div class="modal-title">Actualizar impuesto y precio de venta</div>
+    <div id="modal-impuesto-body"></div>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeModal('modal-impuesto')">Cancelar</button>
+      <button class="btn btn-primary" onclick="confirmarImpuesto()">Actualizar</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-password" style="display:none;">
+  <div class="modal" style="max-width:380px;">
+    <div class="modal-title">Cambiar contraseña</div>
+    <div class="fg" style="margin-bottom:12px;">
+      <label class="flabel">Contraseña actual</label>
+      <input type="password" id="cp-old" placeholder="••••••••">
+    </div>
+    <div class="fg" style="margin-bottom:12px;">
+      <label class="flabel">Nueva contraseña</label>
+      <input type="password" id="cp-new" placeholder="Mínimo 4 caracteres">
+    </div>
+    <div class="fg">
+      <label class="flabel">Confirmar nueva contraseña</label>
+      <input type="password" id="cp-confirm" placeholder="Repetir contraseña">
+    </div>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeModal('modal-password')">Cancelar</button>
+      <button class="btn btn-primary" onclick="cambiarPassword()">Cambiar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ APP ══════════════════════════════════════════════════ -->
+<div class="app" id="app" style="display:none;">
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-wrap">
+        <div class="logo-icon">⚡</div>
+        <div><div class="logo-name">TecnoKeko</div><div class="logo-sub">CONTROL DE VENTAS</div></div>
+      </div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-group">Principal</div>
+      <div class="nav-item active" onclick="showSection('dashboard',this)">
+        <svg class="nav-ic" viewBox="0 0 16 16" fill="none"><rect x="1" y="1" width="6" height="6" rx="1.5" fill="currentColor" opacity=".5"/><rect x="9" y="1" width="6" height="6" rx="1.5" fill="currentColor"/><rect x="1" y="9" width="6" height="6" rx="1.5" fill="currentColor"/><rect x="9" y="9" width="6" height="6" rx="1.5" fill="currentColor" opacity=".5"/></svg>
+        Resumen
+      </div>
+      <div class="nav-item" onclick="showSection('inventario',this)">
+        <svg class="nav-ic" viewBox="0 0 16 16" fill="none"><path d="M1 4l7-3 7 3v8l-7 3-7-3V4z" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/><path d="M8 1v14M1 4l7 3 7-3" stroke="currentColor" stroke-width="1.2"/></svg>
+        Inventario
+      </div>
+      <div class="nav-group">Movimientos</div>
+      <div class="nav-item" onclick="showSection('compras',this)">
+        <svg class="nav-ic" viewBox="0 0 16 16" fill="none"><path d="M2 3h12l-1.5 7H3.5L2 3z" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/><circle cx="5.5" cy="13" r="1" fill="currentColor"/><circle cx="10.5" cy="13" r="1" fill="currentColor"/></svg>
+        Compras / Entradas
+      </div>
+      <div class="nav-item" onclick="showSection('ventas',this)">
+        <svg class="nav-ic" viewBox="0 0 16 16" fill="none"><path d="M2 14V6l6-4 6 4v8" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/><path d="M6 14v-4h4v4" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/></svg>
+        Ventas
+      </div>
+      <div class="nav-group">Créditos</div>
+      <div class="nav-item" onclick="showSection('creditos',this)">
+        <svg class="nav-ic" viewBox="0 0 16 16" fill="none"><rect x="1" y="3" width="14" height="10" rx="2" stroke="currentColor" stroke-width="1.2"/><path d="M1 7h14" stroke="currentColor" stroke-width="1.2"/><circle cx="4" cy="10.5" r="1" fill="currentColor"/></svg>
+        Ventas a crédito
+      </div>
+      <div class="nav-group">Análisis</div>
+      <div class="nav-item" onclick="showSection('costos',this)">
+        <svg class="nav-ic" viewBox="0 0 16 16" fill="none"><path d="M2 12l3-4 3 2 3-5 3 3" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Costos y márgenes
+      </div>
+    </nav>
+    <div class="sidebar-bottom">
+      <div class="user-chip" onclick="document.getElementById('modal-password').style.display='flex'">
+        <div class="user-avatar" id="user-avatar">A</div>
+        <div class="user-name" id="user-name-display">admin</div>
+        <div class="user-logout">⚙</div>
+      </div>
+      <button class="btn btn-danger btn-sm" style="width:100%;margin-top:8px;justify-content:center;" onclick="doLogout()">Cerrar sesión</button>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="topbar">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <button class="hamburger" onclick="toggleSidebar()">☰</button>
+        <div>
+          <div class="page-title" id="page-title">Resumen general</div>
+          <div class="page-sub" id="page-sub">Vista general del negocio</div>
+        </div>
+      </div>
+      <div class="topbar-right">
+        <div class="sync-wrap">
+          <span class="sync-dot" id="sync-dot" style="background:var(--amber);"></span>
+          <span id="sync-label">—</span>
+        </div>
+        <button class="btn btn-sm" onclick="sincronizar()" title="Recargar desde la nube">↺</button>
+        <button class="btn btn-sm" onclick="exportarJSON()">↓ Export</button>
+      </div>
+    </div>
+
+    <div class="content">
+
+      <!-- DASHBOARD -->
+      <div class="section active" id="sec-dashboard">
+        <div class="metrics" id="dash-metrics"></div>
+        <div class="grid-2">
+          <div class="card">
+            <div class="card-header"><span class="card-title">Últimas ventas</span><span class="badge bg-green" id="dash-v-count">0</span></div>
+            <div style="padding:0 18px;" id="dash-ventas"></div>
+          </div>
+          <div class="card">
+            <div class="card-header"><span class="card-title">Créditos activos</span><span class="badge bg-amber" id="dash-c-count">0</span></div>
+            <div style="padding:0 18px;" id="dash-creditos"></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header"><span class="card-title">Stock disponible</span></div>
+          <div id="dash-stock" style="padding:0 4px 4px;"></div>
+        </div>
+      </div>
+
+      <!-- INVENTARIO -->
+      <div class="section" id="sec-inventario">
+        <div class="metrics" id="inv-metrics"></div>
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Artículos en stock</span>
+            <select id="inv-filtro" onchange="renderInventario()" style="width:auto;padding:5px 10px;font-size:12px;">
+              <option value="">Todos</option><option value="nuevo">Nuevo</option>
+              <option value="usado">Usado</option><option value="trade-in">Trade-in</option>
+            </select>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr>
+                <th>Artículo</th><th>Cat.</th><th>Estado</th><th>IMEI</th>
+                <th class="tr">Costo total</th><th class="tr">P.Venta</th><th class="tr">Margen</th>
+                <th class="tc">Disp.</th><th></th>
+              </tr></thead>
+              <tbody id="inv-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- COMPRAS -->
+      <div class="section" id="sec-compras">
+        <div class="card">
+          <div class="card-header"><span class="card-title">Registrar artículo</span></div>
+          <div class="card-body">
+            <div class="form-grid">
+              <div class="fg fg-full"><label class="flabel">Nombre del artículo</label><input type="text" id="cp-nombre" placeholder="Ej: iPhone 15 Pro 256GB Negro"></div>
+              <div class="fg"><label class="flabel">Categoría</label>
+                <select id="cp-cat"><option>Teléfono</option><option>Tablet</option><option>Laptop</option><option>Audífonos</option><option>Smartwatch</option><option>Accesorio</option><option>Consola</option><option>Otro</option></select>
+              </div>
+              <div class="fg"><label class="flabel">Estado</label>
+                <select id="cp-estado"><option value="nuevo">Nuevo</option><option value="usado">Usado</option><option value="trade-in">Trade-in</option></select>
+              </div>
+              <div class="fg"><label class="flabel">IMEI / Serie</label><input type="text" id="cp-imei" placeholder="Opcional"></div>
+              <div class="fg"><label class="flabel">Origen</label>
+                <select id="cp-origen"><option value="online">Compra en línea</option><option value="local">Compra local</option><option value="trade-in">Trade-in recibido</option></select>
+              </div>
+              <div class="fg"><label class="flabel">Precio de compra ($)</label><input type="number" id="cp-precio" placeholder="0.00" min="0" step="0.01" oninput="updateCompraPreview()"></div>
+              <div class="fg">
+                <label class="flabel">Impuesto importación ($) <span style="color:var(--text3);font-weight:400;text-transform:none;">(opcional)</span></label>
+                <input type="number" id="cp-impuesto" placeholder="0.00 — agregar después" min="0" step="0.01" value="0" oninput="updateCompraPreview()">
+                <span class="fhint">Si aún no llegó al país, déjelo en 0 y agréguelo desde inventario</span>
+              </div>
+              <div class="fg">
+                <label class="flabel">Precio venta sugerido ($) <span style="color:var(--text3);font-weight:400;text-transform:none;">(opcional)</span></label>
+                <input type="number" id="cp-pventa" placeholder="0.00 — asignar al conocer costo" min="0" step="0.01" oninput="updateCompraPreview()">
+              </div>
+              <div class="fg"><label class="flabel">Proveedor / Fuente</label><input type="text" id="cp-prov" placeholder="Amazon, eBay, persona..."></div>
+              <div class="fg"><label class="flabel">Fecha entrada</label><input type="date" id="cp-fecha"></div>
+              <div class="fg fg-full"><label class="flabel">Notas</label><input type="text" id="cp-notas" placeholder="Color, capacidad, accesorios incluidos..."></div>
+            </div>
+            <div class="preview-box" id="cp-preview">
+              <div class="pi"><div class="pi-label">Costo total</div><div class="pi-value red" id="cpp-total">$0.00</div></div>
+              <div class="pi"><div class="pi-label">Precio venta</div><div class="pi-value green" id="cpp-venta">$0.00</div></div>
+              <div class="pi"><div class="pi-label">Ganancia est.</div><div class="pi-value" id="cpp-gan">$0.00</div></div>
+              <div class="pi"><div class="pi-label">Margen est.</div><div class="pi-value" id="cpp-margen">0%</div></div>
+            </div>
+            <div style="margin-top:14px;"><button class="btn btn-primary" onclick="registrarArticulo()">+ Registrar artículo</button></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header"><span class="card-title">Historial de entradas</span><span class="badge bg-purple" id="entradas-count">0</span></div>
+          <div id="entradas-alert"></div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr>
+                <th>Fecha</th><th>Artículo</th><th>Estado</th><th>IMEI</th>
+                <th class="tr">Compra</th><th class="tr">Impuesto</th><th class="tr">Costo total</th>
+                <th class="tr">P.Venta</th><th>Proveedor</th><th class="tc">Stock</th><th></th>
+              </tr></thead>
+              <tbody id="entradas-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- VENTAS -->
+      <div class="section" id="sec-ventas">
+        <div class="card">
+          <div class="card-header"><span class="card-title">Registrar venta</span></div>
+          <div class="card-body">
+            <div class="tabs">
+              <div class="tab active" id="tab-cash" onclick="setTipoVenta('cash')">💵 Contado</div>
+              <div class="tab" id="tab-credito" onclick="setTipoVenta('credito')">💳 Crédito</div>
+              <div class="tab" id="tab-tradein" onclick="setTipoVenta('tradein')">🔄 Trade-in</div>
+            </div>
+            <div class="form-grid">
+              <div class="fg fg-full"><label class="flabel">Artículo a vender</label><select id="v-articulo" onchange="updateVentaPreview()"></select></div>
+              <div class="fg"><label class="flabel">Precio de venta ($)</label><input type="number" id="v-precio" placeholder="0.00" min="0" step="0.01" oninput="updateVentaPreview()"></div>
+              <div class="fg"><label class="flabel">Cliente</label><input type="text" id="v-cliente" placeholder="Nombre del cliente"></div>
+              <div class="fg"><label class="flabel">Fecha</label><input type="date" id="v-fecha"></div>
+              <div class="fg"><label class="flabel">Nota</label><input type="text" id="v-nota" placeholder="Referencia..."></div>
+            </div>
+
+            <!-- CRÉDITO -->
+            <div id="credito-opts" style="display:none;">
+              <div class="divider"></div>
+              <div style="font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.07em;margin-bottom:12px;">Configuración del crédito</div>
+              <div class="form-grid">
+                <div class="fg">
+                  <label class="flabel">Enganche / Prima ($)</label>
+                  <input type="number" id="v-enganche" placeholder="0.00" min="0" step="0.01" value="0" oninput="updateVentaPreview()">
+                  <span class="fhint">Cobrado hoy — descuenta del saldo</span>
+                </div>
+                <div class="fg">
+                  <label class="flabel">Saldo a crédito ($)</label>
+                  <input type="number" id="v-saldo" placeholder="Se calcula solo" readonly style="color:var(--amber);opacity:.8;">
+                  <span class="fhint">Precio − enganche</span>
+                </div>
+                <div class="fg">
+                  <label class="flabel">Recargo ($)</label>
+                  <input type="number" id="v-recargo" placeholder="0.00" min="0" step="0.01" value="0" oninput="updateVentaPreview()">
+                  <span class="fhint">Monto fijo adicional (opcional)</span>
+                </div>
+              </div>
+              <div style="background:var(--accent-glow);border:1px solid rgba(124,106,247,.2);border-radius:var(--radius);padding:9px 13px;font-size:12px;color:var(--accent);">
+                💡 Los pagos se registran libremente desde "Créditos" cada vez que el cliente pague.
+              </div>
+            </div>
+
+            <!-- TRADE-IN -->
+            <div id="tradein-opts" style="display:none;">
+              <div class="divider"></div>
+              <div style="font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.07em;margin-bottom:12px;">Artículo recibido como parte de pago</div>
+              <div class="form-grid">
+                <div class="fg fg-full"><label class="flabel">Descripción del artículo recibido</label><input type="text" id="ti-nombre" placeholder="Ej: Samsung Galaxy A54 128GB"></div>
+                <div class="fg"><label class="flabel">IMEI / Serie</label><input type="text" id="ti-imei" placeholder="Opcional"></div>
+                <div class="fg">
+                  <label class="flabel">Valor asignado ($)</label>
+                  <input type="number" id="ti-valor" placeholder="0.00" min="0" step="0.01" value="0" oninput="updateVentaPreview()">
+                  <span class="fhint">Descuenta del precio de venta</span>
+                </div>
+                <div class="fg">
+                  <label class="flabel">Efectivo a cobrar ($)</label>
+                  <input type="number" id="ti-efectivo" readonly style="color:var(--amber);opacity:.8;" placeholder="Se calcula solo">
+                  <span class="fhint">Precio − valor trade-in</span>
+                </div>
+              </div>
+              <div style="background:var(--teal-bg);border:1px solid rgba(45,212,191,.2);border-radius:var(--radius);padding:9px 13px;font-size:12px;color:var(--teal);">
+                ✓ El artículo recibido se agrega automáticamente al inventario para reventa.
+              </div>
+            </div>
+
+            <div class="preview-box" id="v-preview"></div>
+            <div style="margin-top:14px;"><button class="btn btn-primary" onclick="registrarVenta()">+ Registrar venta</button></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header"><span class="card-title">Historial de ventas</span><span class="badge bg-green" id="ventas-count">0</span></div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr>
+                <th>Fecha</th><th>Artículo</th><th>Tipo</th>
+                <th class="tr">P.Venta</th><th class="tr">Costo</th><th class="tr">Ganancia</th><th class="tr">Margen</th>
+                <th>Cliente</th><th class="tc">Det.</th><th></th>
+              </tr></thead>
+              <tbody id="ventas-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- CRÉDITOS -->
+      <div class="section" id="sec-creditos">
+        <div class="metrics" id="cred-metrics"></div>
+        <div class="card">
+          <div class="card-header"><span class="card-title">Créditos activos e historial</span></div>
+          <div id="cred-lista"></div>
+        </div>
+      </div>
+
+      <!-- COSTOS -->
+      <div class="section" id="sec-costos">
+        <div class="metrics" id="cost-metrics"></div>
+        <div class="grid-2">
+          <div class="card"><div class="card-header"><span class="card-title">Estado de resultados</span></div><div class="card-body" id="estado-res"></div></div>
+          <div class="card"><div class="card-header"><span class="card-title">Rentabilidad por categoría</span></div><div style="padding:0 18px;" id="rent-cat"></div></div>
+        </div>
+        <div class="card">
+          <div class="card-header"><span class="card-title">Detalle por artículo vendido</span></div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr>
+                <th>Artículo</th><th>Fecha</th><th>Tipo</th>
+                <th class="tr">Costo</th><th class="tr">Venta</th><th class="tr">Ganancia</th><th class="tr">Margen</th><th>Cliente</th>
+              </tr></thead>
+              <tbody id="cost-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /content -->
+  </main>
+</div><!-- /app -->
+
+<script>
+// ═══════════════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════════════
+let data = { articulos:[], ventas:[], nextId:1 };
+let session = { token:null, usuario:null };
+let apiUrl = null;
+let saveTimer = null;
+let tipoVenta = 'cash';
+let modalPagoVentaId = null;
+let modalImpuestoId = null;
+
+// ═══════════════════════════════════════════════════════════
+// HELPERS
+// ═══════════════════════════════════════════════════════════
+const fmt = (n,d=2) => Number(n||0).toLocaleString('es-SV',{minimumFractionDigits:d,maximumFractionDigits:d});
+const fmtQ = n => '$'+fmt(n);
+const today = () => new Date().toISOString().slice(0,10);
+const getArt = id => data.articulos.find(a=>a.id===id);
+const costoTotal = a => Number(a.precio||0)+Number(a.impuesto||0);
+const getSaldo = v => {
+  if(!v.credito) return 0;
+  const pagado = (v.credito.pagos||[]).reduce((s,p)=>s+Number(p.monto),0);
+  return Math.max(0, v.credito.totalRecibir - pagado);
+};
+
+// ═══════════════════════════════════════════════════════════
+// TOAST
+// ═══════════════════════════════════════════════════════════
+function toast(msg, type='success') {
+  const el = document.createElement('div');
+  el.className = `toast toast-${type}`;
+  el.textContent = msg;
+  document.getElementById('toasts').appendChild(el);
+  setTimeout(() => el.remove(), 3800);
+}
+
+// ═══════════════════════════════════════════════════════════
+// SYNC STATUS
+// ═══════════════════════════════════════════════════════════
+function setSync(s, msg) {
+  const dot = document.getElementById('sync-dot');
+  const lbl = document.getElementById('sync-label');
+  if(!dot||!lbl) return;
+  const map = {
+    synced:  {bg:'var(--green)',  cls:'',        txt:msg||'Sincronizado'},
+    syncing: {bg:'var(--accent)', cls:'syncing', txt:msg||'Guardando…'},
+    offline: {bg:'var(--amber)',  cls:'',        txt:msg||'Sin conexión'},
+    error:   {bg:'var(--red)',    cls:'',        txt:msg||'Error'},
+  };
+  const s2 = map[s]||map.offline;
+  dot.style.background = s2.bg;
+  dot.className = 'sync-dot '+s2.cls;
+  lbl.textContent = s2.txt;
+}
+
+// ═══════════════════════════════════════════════════════════
+// API CALLS
+// ═══════════════════════════════════════════════════════════
+async function apiGet(params={}) {
+  params.token = session.token;
+  const q = Object.entries(params).map(([k,v])=>`${k}=${encodeURIComponent(v)}`).join('&');
+  const r = await fetch(apiUrl+'?'+q);
+  return r.json();
+}
+
+async function apiPost(body={}) {
+  body.token = session.token;
+  const r = await fetch(apiUrl, {
+    method:'POST', mode:'cors',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify(body)
+  });
+  return r.json();
+}
+
+// ═══════════════════════════════════════════════════════════
+// AUTH
+// ═══════════════════════════════════════════════════════════
+async function doLogin() {
+  const btn = document.getElementById('login-btn');
+  const errEl = document.getElementById('login-error');
+  const usuario = document.getElementById('login-user').value.trim();
+  const password = document.getElementById('login-pass').value;
+  if(!usuario||!password){ errEl.textContent='Ingrese usuario y contraseña.'; errEl.style.display='block'; return; }
+  btn.disabled=true; btn.textContent='Ingresando…'; errEl.style.display='none';
+  try {
+    const res = await fetch(apiUrl, {
+      method:'POST', mode:'cors',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ action:'login', usuario, password })
+    });
+    const json = await res.json();
+    if(json.ok) {
+      session = { token:json.token, usuario:json.usuario };
+      localStorage.setItem('tk_session', JSON.stringify(session));
+      document.getElementById('login-screen').style.display='none';
+      document.getElementById('app').style.display='flex';
+      document.getElementById('user-name-display').textContent = json.usuario;
+      document.getElementById('user-avatar').textContent = json.usuario[0].toUpperCase();
+      await cargarDatos();
+    } else {
+      errEl.textContent = json.error||'Error al ingresar.';
+      errEl.style.display = 'block';
+    }
+  } catch(e) {
+    errEl.textContent = 'No se pudo conectar al servidor. Verifique la URL del script.';
+    errEl.style.display = 'block';
+  }
+  btn.disabled=false; btn.textContent='Ingresar';
+}
+
+function doLogout() {
+  if(!confirm('¿Cerrar sesión?')) return;
+  localStorage.removeItem('tk_session');
+  session = {token:null, usuario:null};
+  document.getElementById('app').style.display='none';
+  document.getElementById('login-screen').style.display='flex';
+  document.getElementById('login-pass').value='';
+  document.getElementById('login-error').style.display='none';
+}
+
+async function cambiarPassword() {
+  const oldP = document.getElementById('cp-old').value;
+  const newP = document.getElementById('cp-new').value;
+  const conf = document.getElementById('cp-confirm').value;
+  if(!oldP||!newP||!conf){ toast('Complete todos los campos.','error'); return; }
+  if(newP!==conf){ toast('Las contraseñas no coinciden.','error'); return; }
+  if(newP.length<4){ toast('La contraseña debe tener al menos 4 caracteres.','error'); return; }
+  try {
+    const res = await apiPost({ action:'change_password', oldPassword:oldP, newPassword:newP });
+    if(res.ok){ toast('Contraseña actualizada.'); closeModal('modal-password'); ['cp-old','cp-new','cp-confirm'].forEach(id=>document.getElementById(id).value=''); }
+    else toast(res.error||'Error al cambiar contraseña.','error');
+  } catch(e){ toast('Error de conexión.','error'); }
+}
+
+// ═══════════════════════════════════════════════════════════
+// SETUP URL
+// ═══════════════════════════════════════════════════════════
+function guardarUrl() {
+  const url = document.getElementById('setup-url').value.trim();
+  const errEl = document.getElementById('setup-error');
+  if(!url||!url.includes('script.google.com')){
+    errEl.textContent='Pegue la URL completa del script (debe contener script.google.com).';
+    errEl.style.display='block'; return;
+  }
+  apiUrl = url;
+  localStorage.setItem('tk_api_url', url);
+  document.getElementById('setup-screen').style.display='none';
+  document.getElementById('login-screen').style.display='flex';
+  document.getElementById('login-hint').textContent='Usuario: admin · Contraseña: tecnokeko2024';
+}
+
+// ═══════════════════════════════════════════════════════════
+// DATA SYNC
+// ═══════════════════════════════════════════════════════════
+async function cargarDatos() {
+  setSync('syncing','Cargando…');
+  try {
+    const res = await apiGet({ action:'load' });
+    if(res.ok && res.data && res.data.nextId) {
+      data = res.data;
+      localStorage.setItem('tk_data_cache', JSON.stringify(data));
+    } else {
+      const cache = localStorage.getItem('tk_data_cache');
+      if(cache) data = JSON.parse(cache);
+    }
+    setSync('synced');
+  } catch(e) {
+    const cache = localStorage.getItem('tk_data_cache');
+    if(cache) { try{ data=JSON.parse(cache); }catch(ee){} }
+    setSync('offline');
+    toast('Sin conexión — mostrando datos locales.','info');
+  }
+  fillArticulosSelect(); renderAll();
+}
+
+function save() {
+  try { localStorage.setItem('tk_data_cache', JSON.stringify(data)); } catch(e){}
+  clearTimeout(saveTimer);
+  setSync('syncing');
+  saveTimer = setTimeout(async()=>{
+    try {
+      await apiPost({ action:'save', data });
+      setSync('synced');
+    } catch(e){
+      setSync('error');
+      toast('Error al guardar en la nube. Sus datos están seguros localmente.','error');
+    }
+  }, 700);
+}
+
+async function sincronizar() {
+  await cargarDatos();
+  toast('Datos actualizados desde la nube.');
+}
+
+// ═══════════════════════════════════════════════════════════
+// NAV
+// ═══════════════════════════════════════════════════════════
+const pageTitles = {
+  dashboard:  ['Resumen general','Vista general del negocio TecnoKeko'],
+  inventario: ['Inventario','Stock actual y costos por artículo'],
+  compras:    ['Compras / Entradas','Registro de artículos adquiridos'],
+  ventas:     ['Ventas','Registrar y consultar ventas'],
+  creditos:   ['Ventas a crédito','Seguimiento de cobros y saldos'],
+  costos:     ['Costos y márgenes','Análisis de rentabilidad'],
+};
+function showSection(id, el) {
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('sec-'+id).classList.add('active');
+  if(el) el.classList.add('active');
+  const [t,s]=pageTitles[id]||[id,''];
+  document.getElementById('page-title').textContent=t;
+  document.getElementById('page-sub').textContent=s;
+  closeSidebar(); renderAll();
+}
+function toggleSidebar(){ document.getElementById('sidebar').classList.toggle('open'); document.getElementById('overlay').classList.toggle('open'); }
+function closeSidebar(){ document.getElementById('sidebar').classList.remove('open'); document.getElementById('overlay').classList.remove('open'); }
+function closeModal(id){ document.getElementById(id).style.display='none'; }
+
+// ═══════════════════════════════════════════════════════════
+// TIPO VENTA
+// ═══════════════════════════════════════════════════════════
+function setTipoVenta(tipo) {
+  tipoVenta=tipo;
+  ['cash','credito','tradein'].forEach(t=>document.getElementById('tab-'+t).classList.toggle('active',t===tipo));
+  document.getElementById('credito-opts').style.display = tipo==='credito'?'block':'none';
+  document.getElementById('tradein-opts').style.display  = tipo==='tradein'?'block':'none';
+  updateVentaPreview();
+}
+
+// ═══════════════════════════════════════════════════════════
+// SELECTS
+// ═══════════════════════════════════════════════════════════
+function fillArticulosSelect() {
+  const disp = data.articulos.filter(a=>!a.vendidoId);
+  const sel = document.getElementById('v-articulo');
+  const cur = sel.value;
+  sel.innerHTML = disp.length
+    ? disp.map(a=>`<option value="${a.id}">[${a.estado.toUpperCase()}] ${a.nombre} — ${fmtQ(costoTotal(a))}</option>`).join('')
+    : '<option value="">— Sin artículos disponibles —</option>';
+  if(cur) sel.value=cur;
+}
+
+// ═══════════════════════════════════════════════════════════
+// PREVIEWS
+// ═══════════════════════════════════════════════════════════
+function updateCompraPreview() {
+  const precio   = parseFloat(document.getElementById('cp-precio').value)||0;
+  const impuesto = parseFloat(document.getElementById('cp-impuesto').value)||0;
+  const pventa   = parseFloat(document.getElementById('cp-pventa').value)||0;
+  const box = document.getElementById('cp-preview');
+  if(precio>0){ box.classList.add('show'); }
+  else { box.classList.remove('show'); return; }
+  const total = precio+impuesto;
+  const gan   = pventa-total;
+  const mar   = pventa>0?gan/pventa*100:0;
+  document.getElementById('cpp-total').textContent  = fmtQ(total);
+  document.getElementById('cpp-venta').textContent  = fmtQ(pventa);
+  const gEl = document.getElementById('cpp-gan');   gEl.textContent=fmtQ(gan);   gEl.className='pi-value '+(gan>=0?'green':'red');
+  const mEl = document.getElementById('cpp-margen'); mEl.textContent=mar.toFixed(1)+'%'; mEl.className='pi-value '+(mar>=20?'green':mar>=5?'amber':'red');
+}
+
+function updateVentaPreview() {
+  const artId = parseInt(document.getElementById('v-articulo').value);
+  const art   = getArt(artId);
+  const precio= parseFloat(document.getElementById('v-precio').value)||0;
+  const box   = document.getElementById('v-preview');
+  if(!art||precio<=0){ box.classList.remove('show'); return; }
+  const costo = costoTotal(art);
+  let items=[];
+
+  if(tipoVenta==='cash') {
+    const gan=precio-costo; const mar=precio>0?gan/precio*100:0;
+    items=[
+      {l:'Precio venta',v:fmtQ(precio),c:'green'},
+      {l:'Costo',v:fmtQ(costo),c:'red'},
+      {l:'Ganancia',v:fmtQ(gan),c:gan>=0?'green':'red'},
+      {l:'Margen',v:mar.toFixed(1)+'%',c:mar>=20?'green':mar>=5?'amber':'red'},
+    ];
+  } else if(tipoVenta==='credito') {
+    const enganche = parseFloat(document.getElementById('v-enganche').value)||0;
+    const recargo  = parseFloat(document.getElementById('v-recargo').value)||0;
+    const saldo    = Math.max(0, precio-enganche);
+    document.getElementById('v-saldo').value = saldo.toFixed(2);
+    const totalRecibir = precio+recargo;
+    const gan = totalRecibir-costo;
+    items=[
+      {l:'Precio base',v:fmtQ(precio),c:'blue'},
+      {l:'Enganche hoy',v:fmtQ(enganche),c:'green'},
+      {l:'Saldo a crédito',v:fmtQ(saldo),c:'amber'},
+      {l:'Recargo',v:fmtQ(recargo),c:'amber'},
+      {l:'Total a recibir',v:fmtQ(totalRecibir),c:'green'},
+      {l:'Costo artículo',v:fmtQ(costo),c:'red'},
+      {l:'Ganancia total',v:fmtQ(gan),c:gan>=0?'green':'red'},
+    ];
+  } else if(tipoVenta==='tradein') {
+    const tiValor   = parseFloat(document.getElementById('ti-valor').value)||0;
+    const tiEfectivo= Math.max(0, precio-tiValor);
+    document.getElementById('ti-efectivo').value = tiEfectivo.toFixed(2);
+    const totalRecibir = tiValor+tiEfectivo;
+    const gan=totalRecibir-costo; const mar=totalRecibir>0?gan/totalRecibir*100:0;
+    items=[
+      {l:'Precio venta',v:fmtQ(precio),c:'blue'},
+      {l:'Valor trade-in',v:fmtQ(tiValor),c:'teal'},
+      {l:'Efectivo a cobrar',v:fmtQ(tiEfectivo),c:'green'},
+      {l:'Costo artículo',v:fmtQ(costo),c:'red'},
+      {l:'Ganancia',v:fmtQ(gan),c:gan>=0?'green':'red'},
+      {l:'Margen',v:mar.toFixed(1)+'%',c:mar>=20?'green':mar>=5?'amber':'red'},
+    ];
+  }
+  box.classList.add('show');
+  box.innerHTML = items.map(i=>`<div class="pi"><div class="pi-label">${i.l}</div><div class="pi-value ${i.c||''}">${i.v}</div></div>`).join('');
+}
+
+// ═══════════════════════════════════════════════════════════
+// REGISTRAR ARTÍCULO
+// ═══════════════════════════════════════════════════════════
+function registrarArticulo() {
+  const nombre = document.getElementById('cp-nombre').value.trim();
+  if(!nombre) return toast('Ingrese el nombre del artículo.','error');
+  const precio = parseFloat(document.getElementById('cp-precio').value)||0;
+  if(precio<=0) return toast('Ingrese el precio de compra.','error');
+  const obj = {
+    id:data.nextId++, nombre,
+    categoria:document.getElementById('cp-cat').value,
+    estado:document.getElementById('cp-estado').value,
+    imei:document.getElementById('cp-imei').value.trim(),
+    origen:document.getElementById('cp-origen').value,
+    precio, impuesto:parseFloat(document.getElementById('cp-impuesto').value)||0,
+    pventa:parseFloat(document.getElementById('cp-pventa').value)||0,
+    proveedor:document.getElementById('cp-prov').value.trim(),
+    fecha:document.getElementById('cp-fecha').value||today(),
+    notas:document.getElementById('cp-notas').value.trim(),
+    vendidoId:null,
+  };
+  data.articulos.push(obj);
+  save(); fillArticulosSelect(); renderAll();
+  ['cp-nombre','cp-imei','cp-precio','cp-pventa','cp-prov','cp-notas'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('cp-impuesto').value='0';
+  document.getElementById('cp-preview').classList.remove('show');
+  toast('Artículo "'+nombre+'" registrado.');
+}
+
+function eliminarArticulo(id) {
+  const a=getArt(id); if(!a) return;
+  if(a.vendidoId) return toast('Este artículo ya fue vendido.','error');
+  if(!confirm('¿Eliminar "'+a.nombre+'"?')) return;
+  data.articulos=data.articulos.filter(x=>x.id!==id);
+  save(); fillArticulosSelect(); renderAll();
+}
+
+// ═══════════════════════════════════════════════════════════
+// IMPUESTO DIFERIDO
+// ═══════════════════════════════════════════════════════════
+function abrirModalImpuesto(id) {
+  const a=getArt(id); if(!a) return;
+  modalImpuestoId=id;
+  const ct=costoTotal(a);
+  document.getElementById('modal-impuesto-body').innerHTML=`
+    <div style="background:var(--bg3);border-radius:var(--radius);padding:11px 14px;margin-bottom:16px;">
+      <div style="font-weight:600;margin-bottom:4px;">${a.nombre}</div>
+      <div style="font-size:12px;color:var(--text2);">Compra: <strong style="color:var(--text);">${fmtQ(a.precio)}</strong> · Impuesto actual: <strong style="color:var(--amber);">${fmtQ(a.impuesto)}</strong> · Costo total: <strong style="color:var(--red);">${fmtQ(ct)}</strong></div>
+    </div>
+    <div class="fg" style="margin-bottom:12px;">
+      <label class="flabel">Impuesto de importación ($)</label>
+      <input type="number" id="mi-imp" value="${a.impuesto||0}" min="0" step="0.01" oninput="updateImpPreview()">
+    </div>
+    <div class="fg" style="margin-bottom:12px;">
+      <label class="flabel">Precio de venta ($)</label>
+      <input type="number" id="mi-pv" value="${a.pventa||0}" min="0" step="0.01" oninput="updateImpPreview()">
+      <span class="fhint">Asigne o ajuste ahora que conoce el costo real</span>
+    </div>
+    <div id="mi-prev" style="background:var(--bg3);border-radius:var(--radius);padding:10px 14px;display:flex;gap:16px;flex-wrap:wrap;">
+      <div><div class="pi-label">Nuevo costo total</div><div class="pi-value red" id="mi-costo">${fmtQ(ct)}</div></div>
+      <div><div class="pi-label">Ganancia est.</div><div class="pi-value" id="mi-gan">—</div></div>
+      <div><div class="pi-label">Margen est.</div><div class="pi-value" id="mi-mar">—</div></div>
+    </div>`;
+  document.getElementById('modal-impuesto').style.display='flex';
+}
+function updateImpPreview() {
+  const a=getArt(modalImpuestoId); if(!a) return;
+  const imp=parseFloat(document.getElementById('mi-imp')?.value)||0;
+  const pv =parseFloat(document.getElementById('mi-pv')?.value)||0;
+  const ct=Number(a.precio)+imp; const gan=pv-ct; const mar=pv>0?gan/pv*100:0;
+  const ce=document.getElementById('mi-costo'); if(ce) ce.textContent=fmtQ(ct);
+  const ge=document.getElementById('mi-gan');  if(ge){ ge.textContent=fmtQ(gan); ge.className='pi-value '+(gan>=0?'green':'red'); }
+  const me=document.getElementById('mi-mar');  if(me){ me.textContent=mar.toFixed(1)+'%'; me.className='pi-value '+(mar>=20?'green':mar>=5?'amber':'red'); }
+}
+function confirmarImpuesto() {
+  const a=getArt(modalImpuestoId); if(!a) return;
+  a.impuesto=parseFloat(document.getElementById('mi-imp').value)||0;
+  const pv=parseFloat(document.getElementById('mi-pv').value)||0;
+  if(pv>0) a.pventa=pv;
+  save(); renderAll(); closeModal('modal-impuesto');
+  toast('Costo actualizado: '+fmtQ(costoTotal(a)));
+}
+
+// ═══════════════════════════════════════════════════════════
+// REGISTRAR VENTA
+// ═══════════════════════════════════════════════════════════
+function registrarVenta() {
+  const artId  = parseInt(document.getElementById('v-articulo').value);
+  const art    = getArt(artId);
+  if(!art)  return toast('Seleccione un artículo disponible.','error');
+  const precio = parseFloat(document.getElementById('v-precio').value)||0;
+  if(precio<=0) return toast('Ingrese el precio de venta.','error');
+  const cliente= document.getElementById('v-cliente').value.trim()||'—';
+  const fecha  = document.getElementById('v-fecha').value||today();
+  const nota   = document.getElementById('v-nota').value.trim();
+  const costo  = costoTotal(art);
+
+  let v = { id:data.nextId++, articuloId:artId, articuloNombre:art.nombre, categoria:art.categoria, tipo:tipoVenta, precio, costo, cliente, fecha, nota, ganancia:0, totalRecibir:0, credito:null, tradein:null };
+
+  if(tipoVenta==='cash') {
+    v.ganancia=precio-costo; v.totalRecibir=precio;
+
+  } else if(tipoVenta==='credito') {
+    const enganche=parseFloat(document.getElementById('v-enganche').value)||0;
+    const recargo =parseFloat(document.getElementById('v-recargo').value)||0;
+    const saldo   =Math.max(0,precio-enganche);
+    const totalRecibir=precio+recargo;
+    v.credito={ enganche, saldo, recargo, totalRecibir, pagos:[] };
+    if(enganche>0) v.credito.pagos.push({id:1,monto:enganche,fecha,nota:'Enganche inicial'});
+    v.totalRecibir=totalRecibir; v.ganancia=totalRecibir-costo;
+
+  } else if(tipoVenta==='tradein') {
+    const tiNombre  =document.getElementById('ti-nombre').value.trim()||'Artículo trade-in';
+    const tiImei    =document.getElementById('ti-imei').value.trim();
+    const tiValor   =parseFloat(document.getElementById('ti-valor').value)||0;
+    const tiEfectivo=Math.max(0,precio-tiValor);
+    const totalRecibir=tiValor+tiEfectivo;
+    v.tradein={ nombre:tiNombre, imei:tiImei, valor:tiValor, efectivo:tiEfectivo };
+    v.totalRecibir=totalRecibir; v.ganancia=totalRecibir-costo;
+    // add to inventory
+    data.articulos.push({ id:data.nextId++, nombre:tiNombre, categoria:art.categoria, estado:'trade-in', imei:tiImei, origen:'trade-in', precio:tiValor, impuesto:0, pventa:0, proveedor:cliente, fecha, notas:'Trade-in de '+cliente+' por: '+art.nombre, vendidoId:null });
+  }
+
+  art.vendidoId=v.id;
+  data.ventas.unshift(v);
+  save(); fillArticulosSelect(); renderAll();
+  ['v-precio','v-cliente','v-nota','ti-nombre','ti-imei'].forEach(id=>document.getElementById(id).value='');
+  ['v-enganche','v-recargo','ti-valor'].forEach(id=>{const e=document.getElementById(id); if(e)e.value='0';});
+  ['v-saldo','ti-efectivo'].forEach(id=>{const e=document.getElementById(id); if(e)e.value='';});
+  document.getElementById('v-preview').classList.remove('show');
+  toast('Venta registrada — '+fmtQ(v.totalRecibir)+' | Ganancia: '+fmtQ(v.ganancia));
+}
+
+function eliminarVenta(id) {
+  if(!confirm('¿Eliminar esta venta? El artículo volverá al inventario.')) return;
+  const v=data.ventas.find(x=>x.id===id); if(!v) return;
+  const a=getArt(v.articuloId); if(a) a.vendidoId=null;
+  data.ventas=data.ventas.filter(x=>x.id!==id);
+  save(); fillArticulosSelect(); renderAll();
+}
+
+// ═══════════════════════════════════════════════════════════
+// PAGOS LIBRES
+// ═══════════════════════════════════════════════════════════
+function abrirModalPago(ventaId) {
+  const v=data.ventas.find(x=>x.id===ventaId); if(!v||!v.credito) return;
+  const saldo=getSaldo(v);
+  if(saldo<=0){ toast('Este crédito ya está liquidado.','info'); return; }
+  modalPagoVentaId=ventaId;
+  document.getElementById('modal-pago-title').textContent='Registrar pago — '+v.articuloNombre;
+  const pagados=(v.credito.pagos||[]).reduce((s,p)=>s+Number(p.monto),0);
+  document.getElementById('modal-pago-body').innerHTML=`
+    <div style="background:var(--bg3);border-radius:var(--radius);padding:11px 14px;margin-bottom:14px;display:flex;gap:18px;flex-wrap:wrap;">
+      <div><div class="pi-label">Cliente</div><div style="font-weight:600;">${v.cliente}</div></div>
+      <div><div class="pi-label">Total crédito</div><div style="font-weight:600;font-family:'JetBrains Mono',monospace;">${fmtQ(v.credito.totalRecibir)}</div></div>
+      <div><div class="pi-label">Ya pagado</div><div style="font-weight:600;color:var(--green);font-family:'JetBrains Mono',monospace;">${fmtQ(pagados)}</div></div>
+      <div><div class="pi-label">Saldo pendiente</div><div style="font-weight:700;color:var(--amber);font-family:'JetBrains Mono',monospace;">${fmtQ(saldo)}</div></div>
+    </div>
+    <div class="fg" style="margin-bottom:12px;">
+      <label class="flabel">Monto recibido ($)</label>
+      <input type="number" id="mp-monto" placeholder="0.00" min="0.01" step="0.01" style="font-family:'JetBrains Mono',monospace;font-size:15px;" oninput="updatePagoPreview(${saldo})">
+    </div>
+    <div class="fg" style="margin-bottom:12px;">
+      <label class="flabel">Fecha de pago</label>
+      <input type="date" id="mp-fecha" value="${today()}">
+    </div>
+    <div class="fg" style="margin-bottom:8px;">
+      <label class="flabel">Nota</label>
+      <input type="text" id="mp-nota" placeholder="Transferencia, efectivo, ref…">
+    </div>
+    <div id="mp-prev" style="display:none;background:var(--bg3);border-radius:var(--radius);padding:10px 14px;flex-wrap:wrap;gap:16px;">
+      <div><div class="pi-label">Pago</div><div class="pi-value green" id="mpp-pago">$0.00</div></div>
+      <div><div class="pi-label">Nuevo saldo</div><div class="pi-value" id="mpp-saldo">${fmtQ(saldo)}</div></div>
+      <div><div class="pi-label">Estado</div><div class="pi-value" id="mpp-estado">—</div></div>
+    </div>`;
+  document.getElementById('modal-pago').style.display='flex';
+}
+
+function updatePagoPreview(saldoActual) {
+  const monto=parseFloat(document.getElementById('mp-monto')?.value)||0;
+  const nuevo=Math.max(0,saldoActual-monto);
+  const box=document.getElementById('mp-prev'); if(box) box.style.display='flex';
+  const pe=document.getElementById('mpp-pago');   if(pe) pe.textContent=fmtQ(monto);
+  const se=document.getElementById('mpp-saldo');  if(se){ se.textContent=fmtQ(nuevo); se.className='pi-value '+(nuevo<=0?'green':'amber'); }
+  const ee=document.getElementById('mpp-estado'); if(ee){ ee.textContent=nuevo<=0?'✓ Liquidado':'Pendiente: '+fmtQ(nuevo); ee.style.color=nuevo<=0?'var(--green)':'var(--text2)'; }
+}
+
+function confirmarPago() {
+  const v=data.ventas.find(x=>x.id===modalPagoVentaId); if(!v) return;
+  const monto=parseFloat(document.getElementById('mp-monto').value)||0;
+  const fecha=document.getElementById('mp-fecha').value||today();
+  const nota =document.getElementById('mp-nota').value.trim();
+  if(!monto||monto<=0) return toast('Ingrese el monto recibido.','error');
+  const saldo=getSaldo(v);
+  if(monto>saldo+0.01) return toast('El monto supera el saldo de '+fmtQ(saldo)+'.','error');
+  if(!v.credito.pagos) v.credito.pagos=[];
+  const num=v.credito.pagos.length+1;
+  v.credito.pagos.push({id:num,monto,fecha,nota});
+  const nuevoSaldo=getSaldo(v);
+  save(); renderAll(); closeModal('modal-pago');
+  if(nuevoSaldo<=0) toast('¡Crédito liquidado! Último pago: '+fmtQ(monto));
+  else toast('Pago #'+num+' registrado: '+fmtQ(monto)+' | Saldo: '+fmtQ(nuevoSaldo));
+}
+
+// ═══════════════════════════════════════════════════════════
+// DETALLE VENTA
+// ═══════════════════════════════════════════════════════════
+function abrirDetalleVenta(id) {
+  const v=data.ventas.find(x=>x.id===id); if(!v) return;
+  document.getElementById('modal-detalle-title').textContent=v.articuloNombre;
+  let html=`
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;">
+      <div><div class="pi-label">Cliente</div><div style="font-weight:600;">${v.cliente}</div></div>
+      <div><div class="pi-label">Fecha</div><div style="font-weight:600;">${v.fecha}</div></div>
+      <div><div class="pi-label">Precio venta</div><div style="font-weight:600;color:var(--green);">${fmtQ(v.precio)}</div></div>
+      <div><div class="pi-label">Costo</div><div style="font-weight:600;color:var(--red);">${fmtQ(v.costo)}</div></div>
+      <div><div class="pi-label">Total a recibir</div><div style="font-weight:600;color:var(--accent);">${fmtQ(v.totalRecibir)}</div></div>
+      <div><div class="pi-label">Ganancia</div><div style="font-weight:700;color:${v.ganancia>=0?'var(--green)':'var(--red)'};">${fmtQ(v.ganancia)}</div></div>
+    </div>`;
+
+  if(v.credito){
+    const c=v.credito; const pagos=c.pagos||[];
+    const totalPagado=pagos.reduce((s,p)=>s+Number(p.monto),0);
+    const saldo=Math.max(0,c.totalRecibir-totalPagado);
+    const pct=c.totalRecibir>0?totalPagado/c.totalRecibir*100:0;
+    html+=`<div class="divider"></div>
+    <div style="font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.07em;margin-bottom:10px;">Crédito</div>
+    <div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:12px;font-size:12px;">
+      <span>Enganche: <strong style="color:var(--green);">${fmtQ(c.enganche)}</strong></span>
+      <span>Saldo crédito: <strong style="color:var(--amber);">${fmtQ(c.saldo)}</strong></span>
+      <span>Recargo: <strong>${fmtQ(c.recargo||0)}</strong></span>
+      <span>Total: <strong>${fmtQ(c.totalRecibir)}</strong></span>
+      <span>Cobrado: <strong style="color:var(--green);">${fmtQ(totalPagado)}</strong></span>
+      <span>Saldo: <strong style="color:${saldo<=0?'var(--green)':'var(--amber)'};">${fmtQ(saldo)}</strong></span>
+    </div>
+    <div style="margin-bottom:12px;">
+      <div class="pbar"><div class="pbar-fill" style="width:${pct.toFixed(0)}%;background:${saldo<=0?'var(--green)':'var(--accent)'}"></div></div>
+    </div>
+    <div style="font-size:11px;color:var(--text2);margin-bottom:8px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;">${pagos.length} pago(s)</div>
+    ${pagos.length?pagos.map(p=>`
+    <div class="cuota-row">
+      <span class="cuota-num">Pago #${p.id}</span>
+      <span class="cuota-monto" style="color:var(--green);">${fmtQ(p.monto)}</span>
+      <span style="font-size:11px;color:var(--text2);">${p.fecha}</span>
+      ${p.nota?`<span style="font-size:11px;color:var(--text3);">${p.nota}</span>`:''}
+      <span class="badge bg-green" style="font-size:10px;margin-left:auto;">✓</span>
+    </div>`).join(''):'<div style="font-size:13px;color:var(--text3);padding:6px 0;">Sin pagos registrados aún.</div>'}`;
+  }
+
+  if(v.tradein){
+    const ti=v.tradein;
+    html+=`<div class="divider"></div>
+    <div style="font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.07em;margin-bottom:10px;">Trade-in recibido</div>
+    <div style="display:flex;gap:16px;flex-wrap:wrap;font-size:12px;">
+      <span>Artículo: <strong>${ti.nombre}</strong></span>
+      ${ti.imei?`<span>IMEI: <strong>${ti.imei}</strong></span>`:''}
+      <span>Valor: <strong style="color:var(--teal);">${fmtQ(ti.valor)}</strong></span>
+      <span>Efectivo: <strong style="color:var(--green);">${fmtQ(ti.efectivo)}</strong></span>
+    </div>`;
+  }
+
+  document.getElementById('modal-detalle-body').innerHTML=html;
+  document.getElementById('modal-detalle').style.display='flex';
+}
+
+// ═══════════════════════════════════════════════════════════
+// EXPORT
+// ═══════════════════════════════════════════════════════════
+function exportarJSON() {
+  const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
+  a.download='tecnokeko-backup-'+today()+'.json'; a.click();
+  toast('Datos exportados.');
+}
+
+// ═══════════════════════════════════════════════════════════
+// RENDERS
+// ═══════════════════════════════════════════════════════════
+function renderDashboard() {
+  const totalIngresos = data.ventas.reduce((s,v)=>s+v.totalRecibir,0);
+  const totalGanancia = data.ventas.reduce((s,v)=>s+v.ganancia,0);
+  const creditosPend  = data.ventas.filter(v=>v.credito&&getSaldo(v)>0);
+  const montoPend     = creditosPend.reduce((s,v)=>s+getSaldo(v),0);
+  const disponibles   = data.articulos.filter(a=>!a.vendidoId);
+  const valorStock    = disponibles.reduce((s,a)=>s+costoTotal(a),0);
+
+  document.getElementById('dash-metrics').innerHTML=`
+    <div class="metric"><div class="metric-label">Ingresos totales</div><div class="metric-value green">${fmtQ(totalIngresos)}</div><div class="metric-sub">${data.ventas.length} venta(s)</div></div>
+    <div class="metric"><div class="metric-label">Ganancia bruta</div><div class="metric-value ${totalGanancia>=0?'green':'red'}">${fmtQ(totalGanancia)}</div></div>
+    <div class="metric"><div class="metric-label">Por cobrar</div><div class="metric-value amber">${fmtQ(montoPend)}</div><div class="metric-sub">${creditosPend.length} crédito(s) activo(s)</div></div>
+    <div class="metric"><div class="metric-label">En inventario</div><div class="metric-value purple">${disponibles.length}</div><div class="metric-sub">Valor: ${fmtQ(valorStock)}</div></div>`;
+
+  document.getElementById('dash-v-count').textContent=data.ventas.length;
+  document.getElementById('dash-c-count').textContent=creditosPend.length;
+
+  const uv=data.ventas.slice(0,5);
+  document.getElementById('dash-ventas').innerHTML=uv.length?uv.map(v=>`
+    <div class="mini-item">
+      <div><div class="mi-name">${v.articuloNombre}</div><div class="mi-sub">${v.fecha} · ${v.cliente}</div></div>
+      <div><div class="mi-value" style="color:${v.ganancia>=0?'var(--green)':'var(--red)'};">${fmtQ(v.totalRecibir)}</div>
+      <div style="font-size:11px;color:var(--text2);text-align:right;">${v.tipo==='cash'?'Contado':v.tipo==='credito'?'Crédito':'Trade-in'}</div></div>
+    </div>`).join(''):'<div class="empty"><div class="empty-icon">💰</div><div style="font-size:13px;">Sin ventas</div></div>';
+
+  const creds=creditosPend.slice(0,5);
+  document.getElementById('dash-creditos').innerHTML=creds.length?creds.map(v=>{
+    const s=getSaldo(v); const pag=(v.credito.pagos||[]).length;
+    const pct=v.credito.totalRecibir>0?(1-s/v.credito.totalRecibir)*100:0;
+    return `<div class="mini-item" onclick="abrirDetalleVenta(${v.id})" style="cursor:pointer;">
+      <div style="flex:1;min-width:0;">
+        <div class="mi-name" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${v.articuloNombre}</div>
+        <div class="mi-sub">${v.cliente} · ${pag} pago(s)</div>
+        <div class="pbar"><div class="pbar-fill" style="width:${pct.toFixed(0)}%;background:var(--accent)"></div></div>
+      </div>
+      <div class="mi-value" style="color:var(--amber);margin-left:10px;">${fmtQ(s)}</div>
+    </div>`;
+  }).join(''):'<div class="empty"><div style="font-size:13px;">Sin créditos activos</div></div>';
+
+  const disp=disponibles.slice(0,10);
+  document.getElementById('dash-stock').innerHTML=disp.length?`<div style="display:flex;flex-wrap:wrap;gap:8px;padding:14px 18px;">`+disp.map(a=>`
+    <div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);padding:9px 12px;min-width:180px;flex:1;">
+      <div style="font-size:12px;font-weight:600;margin-bottom:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${a.nombre}</div>
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <span class="tag">${a.categoria}</span>
+        <span class="mono" style="color:var(--accent);">${fmtQ(costoTotal(a))}</span>
+      </div>
+      <div style="margin-top:5px;">${a.estado==='nuevo'?'<span class="badge bg-green">Nuevo</span>':a.estado==='usado'?'<span class="badge bg-amber">Usado</span>':'<span class="badge bg-teal">Trade-in</span>'}</div>
+    </div>`).join('')+'</div>'
+  :'<div class="empty"><div class="empty-icon">📦</div><div style="font-size:13px;">Sin artículos en inventario</div></div>';
+}
+
+function renderInventario() {
+  const filtro=document.getElementById('inv-filtro')?.value||'';
+  const arr=data.articulos.filter(a=>!filtro||a.estado===filtro);
+  const disp=arr.filter(a=>!a.vendidoId);
+  const vend=arr.filter(a=>a.vendidoId);
+  const val=disp.reduce((s,a)=>s+costoTotal(a),0);
+  document.getElementById('inv-metrics').innerHTML=`
+    <div class="metric"><div class="metric-label">Total artículos</div><div class="metric-value purple">${arr.length}</div></div>
+    <div class="metric"><div class="metric-label">Disponibles</div><div class="metric-value green">${disp.length}</div></div>
+    <div class="metric"><div class="metric-label">Vendidos</div><div class="metric-value amber">${vend.length}</div></div>
+    <div class="metric"><div class="metric-label">Valor en stock</div><div class="metric-value blue">${fmtQ(val)}</div></div>`;
+
+  document.getElementById('inv-tbody').innerHTML=arr.length?arr.map(a=>{
+    const ct=costoTotal(a); const m=a.pventa>0?(a.pventa-ct)/a.pventa*100:null;
+    const sinImp=!a.vendidoId&&a.origen==='online'&&(!a.impuesto||a.impuesto===0);
+    return `<tr>
+      <td><div style="font-weight:500;">${a.nombre}${sinImp?'<span class="badge bg-amber" style="font-size:10px;margin-left:5px;">imp.pendiente</span>':''}</div><div style="font-size:11px;color:var(--text2);">${a.notas||''}</div></td>
+      <td><span class="tag">${a.categoria}</span></td>
+      <td><span class="badge ${a.estado==='nuevo'?'bg-green':a.estado==='usado'?'bg-amber':'bg-teal'}">${a.estado}</span></td>
+      <td class="mono" style="color:var(--text3);font-size:11px;">${a.imei||'—'}</td>
+      <td class="tr mono" style="color:var(--red);">${fmtQ(ct)}</td>
+      <td class="tr mono" style="color:${a.pventa?'var(--green)':'var(--text3)'};">${a.pventa?fmtQ(a.pventa):'—'}</td>
+      <td class="tr"><span style="color:${m===null?'var(--text3)':m>=20?'var(--green)':m>=5?'var(--amber)':'var(--red)'};font-family:'JetBrains Mono',monospace;font-size:12px;">${m!==null?m.toFixed(1)+'%':'—'}</span></td>
+      <td class="tc">${a.vendidoId?'<span class="badge bg-gray">Vendido</span>':'<span class="badge bg-green">Disponible</span>'}</td>
+      <td style="white-space:nowrap;">${!a.vendidoId?`<button class="btn btn-sm" style="margin-right:4px;" onclick="abrirModalImpuesto(${a.id})">✏</button><button class="btn btn-danger btn-sm btn-icon" onclick="eliminarArticulo(${a.id})">✕</button>`:''}</td>
+    </tr>`;
+  }).join(''):'<tr><td colspan="9"><div class="empty"><div style="font-size:13px;">Sin artículos</div></div></td></tr>';
+}
+
+function renderCompras() {
+  document.getElementById('entradas-count').textContent=data.articulos.length;
+  const sinImp=data.articulos.filter(a=>!a.vendidoId&&a.origen==='online'&&(!a.impuesto||a.impuesto===0));
+  document.getElementById('entradas-alert').innerHTML=sinImp.length?`<div style="background:var(--amber-bg);border:1px solid rgba(255,190,61,.3);border-radius:var(--radius);padding:9px 14px;font-size:12px;color:var(--amber);margin:12px 18px 0;">⚠ ${sinImp.length} artículo(s) de compra en línea sin impuesto registrado.</div>`:'';
+
+  document.getElementById('entradas-tbody').innerHTML=data.articulos.slice().reverse().map(a=>{
+    const ct=costoTotal(a);
+    const sinImp=!a.vendidoId&&a.origen==='online'&&(!a.impuesto||a.impuesto===0);
+    return `<tr>
+      <td class="mono" style="color:var(--text3);white-space:nowrap;">${a.fecha}</td>
+      <td style="font-weight:500;max-width:170px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${a.nombre}${sinImp?'<span class="badge bg-amber" style="font-size:10px;margin-left:4px;">imp.pend.</span>':''}</td>
+      <td><span class="badge ${a.estado==='nuevo'?'bg-green':a.estado==='usado'?'bg-amber':'bg-teal'}">${a.estado}</span></td>
+      <td class="mono" style="color:var(--text3);font-size:11px;">${a.imei||'—'}</td>
+      <td class="tr mono">${fmtQ(a.precio)}</td>
+      <td class="tr mono" style="color:${a.impuesto?'var(--amber)':'var(--text3)'};">${a.impuesto?fmtQ(a.impuesto):'—'}</td>
+      <td class="tr mono" style="font-weight:600;color:var(--red);">${fmtQ(ct)}</td>
+      <td class="tr mono" style="color:${a.pventa?'var(--green)':'var(--text3)'};">${a.pventa?fmtQ(a.pventa):'—'}</td>
+      <td style="color:var(--text2);font-size:12px;">${a.proveedor||'—'}</td>
+      <td class="tc">${a.vendidoId?'<span class="badge bg-gray">Vendido</span>':'<span class="badge bg-green">Stock</span>'}</td>
+      <td style="white-space:nowrap;">${!a.vendidoId?`<button class="btn btn-sm" style="margin-right:3px;" onclick="abrirModalImpuesto(${a.id})">+ Imp.</button><button class="btn btn-danger btn-sm btn-icon" onclick="eliminarArticulo(${a.id})">✕</button>`:''}</td>
+    </tr>`;
+  }).join('')||'<tr><td colspan="11"><div class="empty"><div style="font-size:13px;">Sin artículos registrados</div></div></td></tr>';
+}
+
+function renderVentas() {
+  document.getElementById('ventas-count').textContent=data.ventas.length;
+  document.getElementById('ventas-tbody').innerHTML=data.ventas.map(v=>{
+    const m=v.totalRecibir>0?v.ganancia/v.totalRecibir*100:0;
+    const tb=v.tipo==='cash'?'bg-green':v.tipo==='credito'?'bg-purple':'bg-teal';
+    const tl=v.tipo==='cash'?'Contado':v.tipo==='credito'?'Crédito':'Trade-in';
+    return `<tr>
+      <td class="mono" style="color:var(--text3);white-space:nowrap;">${v.fecha}</td>
+      <td style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:500;">${v.articuloNombre}</td>
+      <td><span class="badge ${tb}">${tl}</span></td>
+      <td class="tr mono" style="color:var(--green);">${fmtQ(v.precio)}</td>
+      <td class="tr mono" style="color:var(--red);">${fmtQ(v.costo)}</td>
+      <td class="tr mono" style="color:${v.ganancia>=0?'var(--green)':'var(--red)'};font-weight:700;">${fmtQ(v.ganancia)}</td>
+      <td class="tr"><span style="color:${m>=20?'var(--green)':m>=5?'var(--amber)':'var(--red)'};font-family:'JetBrains Mono',monospace;font-size:12px;">${m.toFixed(1)}%</span></td>
+      <td>${v.cliente}</td>
+      <td class="tc"><button class="btn btn-sm" onclick="abrirDetalleVenta(${v.id})">Ver</button></td>
+      <td><button class="btn btn-danger btn-sm btn-icon" onclick="eliminarVenta(${v.id})">✕</button></td>
+    </tr>`;
+  }).join('')||'<tr><td colspan="10"><div class="empty"><div style="font-size:13px;">Sin ventas</div></div></td></tr>';
+}
+
+function renderCreditos() {
+  const creds=data.ventas.filter(v=>v.credito);
+  const activos=creds.filter(v=>getSaldo(v)>0);
+  const liquidados=creds.filter(v=>getSaldo(v)<=0);
+  const montoActivo=activos.reduce((s,v)=>s+getSaldo(v),0);
+  const cobrado=creds.reduce((s,v)=>s+(v.credito.pagos||[]).reduce((ss,p)=>ss+Number(p.monto),0),0);
+
+  document.getElementById('cred-metrics').innerHTML=`
+    <div class="metric"><div class="metric-label">Créditos activos</div><div class="metric-value amber">${activos.length}</div></div>
+    <div class="metric"><div class="metric-label">Saldo por cobrar</div><div class="metric-value red">${fmtQ(montoActivo)}</div></div>
+    <div class="metric"><div class="metric-label">Liquidados</div><div class="metric-value green">${liquidados.length}</div></div>
+    <div class="metric"><div class="metric-label">Total cobrado</div><div class="metric-value green">${fmtQ(cobrado)}</div></div>`;
+
+  if(!creds.length){ document.getElementById('cred-lista').innerHTML='<div class="empty"><div class="empty-icon">💳</div><div style="font-size:13px;">Sin créditos registrados</div></div>'; return; }
+
+  document.getElementById('cred-lista').innerHTML=[...activos,...liquidados].map(v=>{
+    const c=v.credito; const pagos=c.pagos||[];
+    const pagado=pagos.reduce((s,p)=>s+Number(p.monto),0);
+    const saldo=Math.max(0,c.totalRecibir-pagado);
+    const pct=c.totalRecibir>0?pagado/c.totalRecibir*100:0;
+    const liq=saldo<=0;
+    const ultimo=pagos.length?pagos[pagos.length-1]:null;
+    return `<div style="border-bottom:1px solid var(--border);padding:16px 18px;">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:10px;margin-bottom:10px;">
+        <div>
+          <div style="font-weight:600;font-size:14px;margin-bottom:2px;">${v.articuloNombre}</div>
+          <div style="font-size:12px;color:var(--text2);">${v.cliente} · ${v.fecha}${ultimo?' · Último pago: '+ultimo.fecha:''}</div>
+        </div>
+        <div style="display:flex;gap:7px;align-items:center;flex-wrap:wrap;">
+          ${liq?'<span class="badge bg-green">✓ Liquidado</span>':'<span class="badge bg-amber">Activo</span>'}
+          <button class="btn btn-sm" onclick="abrirDetalleVenta(${v.id})">Ver pagos</button>
+          ${!liq?`<button class="btn btn-success btn-sm" onclick="abrirModalPago(${v.id})">+ Registrar pago</button>`:''}
+        </div>
+      </div>
+      <div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:8px;font-size:12px;">
+        <span>Precio: <strong>${fmtQ(v.precio)}</strong></span>
+        <span>Enganche: <strong style="color:var(--green);">${fmtQ(c.enganche)}</strong></span>
+        <span>Total crédito: <strong>${fmtQ(c.totalRecibir)}</strong></span>
+        <span>Cobrado: <strong style="color:var(--green);">${fmtQ(pagado)}</strong></span>
+        <span>Saldo: <strong style="color:${liq?'var(--green)':'var(--amber)'};">${fmtQ(saldo)}</strong></span>
+        <span>${pagos.length} pago(s)</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <div class="pbar" style="flex:1;"><div class="pbar-fill" style="width:${pct.toFixed(0)}%;background:${liq?'var(--green)':'var(--accent)'}"></div></div>
+        <span class="mono" style="font-size:11px;color:var(--text2);white-space:nowrap;">${pct.toFixed(0)}%</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderCostos() {
+  const tv=data.ventas.reduce((s,v)=>s+v.totalRecibir,0);
+  const cogs=data.ventas.reduce((s,v)=>s+v.costo,0);
+  const gan=data.ventas.reduce((s,v)=>s+v.ganancia,0);
+  const mar=tv>0?gan/tv*100:0;
+  const vStock=data.articulos.filter(a=>!a.vendidoId).reduce((s,a)=>s+costoTotal(a),0);
+  const tiInv=data.articulos.reduce((s,a)=>s+costoTotal(a),0);
+
+  document.getElementById('cost-metrics').innerHTML=`
+    <div class="metric"><div class="metric-label">Ingresos</div><div class="metric-value green">${fmtQ(tv)}</div></div>
+    <div class="metric"><div class="metric-label">COGS</div><div class="metric-value red">${fmtQ(cogs)}</div></div>
+    <div class="metric"><div class="metric-label">Ganancia bruta</div><div class="metric-value ${gan>=0?'green':'red'}">${fmtQ(gan)}</div></div>
+    <div class="metric"><div class="metric-label">Margen bruto</div><div class="metric-value ${mar>=20?'green':mar>=5?'amber':'red'}">${mar.toFixed(1)}%</div></div>
+    <div class="metric"><div class="metric-label">Total invertido</div><div class="metric-value blue">${fmtQ(tiInv)}</div></div>
+    <div class="metric"><div class="metric-label">Valor en stock</div><div class="metric-value amber">${fmtQ(vStock)}</div></div>`;
+
+  const cash=data.ventas.filter(v=>v.tipo==='cash');
+  const cred=data.ventas.filter(v=>v.tipo==='credito');
+  const ti  =data.ventas.filter(v=>v.tipo==='tradein');
+  document.getElementById('estado-res').innerHTML=`
+    <div class="arow"><span class="arow-label">Ventas contado (${cash.length})</span><span class="arow-value" style="color:var(--green);">${fmtQ(cash.reduce((s,v)=>s+v.totalRecibir,0))}</span></div>
+    <div class="arow"><span class="arow-label">Ventas crédito (${cred.length})</span><span class="arow-value" style="color:var(--accent);">${fmtQ(cred.reduce((s,v)=>s+v.totalRecibir,0))}</span></div>
+    <div class="arow"><span class="arow-label">Trade-in (${ti.length})</span><span class="arow-value" style="color:var(--teal);">${fmtQ(ti.reduce((s,v)=>s+v.totalRecibir,0))}</span></div>
+    <div class="arow" style="border-top:1px solid var(--border2);padding-top:12px;margin-top:2px;"><span style="font-weight:700;">Ingresos totales</span><span class="arow-value" style="color:var(--green);font-size:16px;">${fmtQ(tv)}</span></div>
+    <div class="arow"><span class="arow-label">(-) COGS</span><span class="arow-value" style="color:var(--red);">(${fmtQ(cogs)})</span></div>
+    <div class="arow"><span style="font-weight:700;">Ganancia bruta</span><span class="arow-value" style="color:${gan>=0?'var(--green)':'var(--red)'};font-size:16px;">${fmtQ(gan)}</span></div>
+    <div class="divider"></div>
+    <div class="arow"><span class="arow-label">G. contado</span><span class="arow-value" style="color:var(--green);">${fmtQ(cash.reduce((s,v)=>s+v.ganancia,0))}</span></div>
+    <div class="arow"><span class="arow-label">G. crédito</span><span class="arow-value" style="color:var(--accent);">${fmtQ(cred.reduce((s,v)=>s+v.ganancia,0))}</span></div>
+    <div class="arow"><span class="arow-label">G. trade-in</span><span class="arow-value" style="color:var(--teal);">${fmtQ(ti.reduce((s,v)=>s+v.ganancia,0))}</span></div>`;
+
+  const cats=[...new Set(data.ventas.map(v=>v.categoria))];
+  document.getElementById('rent-cat').innerHTML=cats.length?cats.map(cat=>{
+    const vs=data.ventas.filter(v=>v.categoria===cat);
+    const ing=vs.reduce((s,v)=>s+v.totalRecibir,0); const g=vs.reduce((s,v)=>s+v.ganancia,0);
+    const m=ing>0?g/ing*100:0;
+    return `<div class="mini-item">
+      <div><div class="mi-name">${cat}</div><div class="mi-sub">${vs.length} venta(s)</div></div>
+      <div><div class="mi-value" style="color:${g>=0?'var(--green)':'var(--red)'};">${fmtQ(g)}</div>
+      <div style="font-size:11px;color:var(--text2);text-align:right;">${m.toFixed(1)}%</div></div>
+    </div>`;
+  }).join(''):'<div class="empty" style="padding:16px 0;"><div style="font-size:13px;">Sin datos</div></div>';
+
+  document.getElementById('cost-tbody').innerHTML=data.ventas.map(v=>{
+    const m=v.totalRecibir>0?v.ganancia/v.totalRecibir*100:0;
+    return `<tr>
+      <td style="font-weight:500;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${v.articuloNombre}</td>
+      <td class="mono" style="color:var(--text3);">${v.fecha}</td>
+      <td><span class="badge ${v.tipo==='cash'?'bg-green':v.tipo==='credito'?'bg-purple':'bg-teal'}">${v.tipo==='cash'?'Contado':v.tipo==='credito'?'Crédito':'Trade-in'}</span></td>
+      <td class="tr mono" style="color:var(--red);">${fmtQ(v.costo)}</td>
+      <td class="tr mono" style="color:var(--green);">${fmtQ(v.totalRecibir)}</td>
+      <td class="tr mono" style="color:${v.ganancia>=0?'var(--green)':'var(--red)'};font-weight:700;">${fmtQ(v.ganancia)}</td>
+      <td class="tr"><span style="color:${m>=20?'var(--green)':m>=5?'var(--amber)':'var(--red)'};font-family:'JetBrains Mono',monospace;font-size:12px;">${m.toFixed(1)}%</span></td>
+      <td>${v.cliente}</td>
+    </tr>`;
+  }).join('')||'<tr><td colspan="8"><div class="empty"><div style="font-size:13px;">Sin ventas</div></div></td></tr>';
+}
+
+function renderAll() {
+  fillArticulosSelect();
+  renderDashboard(); renderInventario(); renderCompras();
+  renderVentas(); renderCreditos(); renderCostos();
+}
+
+// ═══════════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════════
+(function init(){
+  document.getElementById('cp-fecha').value=today();
+  document.getElementById('v-fecha').value=today();
+
+  // check saved api url
+  const savedUrl=localStorage.getItem('tk_api_url');
+  if(!savedUrl){
+    document.getElementById('setup-screen').style.display='flex';
+    document.getElementById('login-screen').style.display='none';
+    return;
+  }
+  apiUrl=savedUrl;
+
+  // check saved session
+  const savedSession=localStorage.getItem('tk_session');
+  if(savedSession){
+    try{
+      session=JSON.parse(savedSession);
+      document.getElementById('login-screen').style.display='none';
+      document.getElementById('app').style.display='flex';
+      document.getElementById('user-name-display').textContent=session.usuario||'admin';
+      document.getElementById('user-avatar').textContent=(session.usuario||'A')[0].toUpperCase();
+      document.getElementById('login-hint').textContent='Usuario: admin · Contraseña: tecnokeko2024';
+      // load data from cache while fetching fresh
+      const cache=localStorage.getItem('tk_data_cache');
+      if(cache){ try{data=JSON.parse(cache);}catch(e){} fillArticulosSelect(); renderAll(); }
+      cargarDatos();
+    } catch(e){
+      document.getElementById('login-screen').style.display='flex';
+    }
+  } else {
+    document.getElementById('login-hint').textContent='Usuario: admin · Contraseña: tecnokeko2024';
+  }
+})();
+</script>
+</body>
+</html>
