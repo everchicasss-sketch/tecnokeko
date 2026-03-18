@@ -270,20 +270,19 @@ tbody tr:hover td{background:var(--bg3);}
       <div class="login-logo-icon" style="width:40px;height:40px;font-size:20px;border-radius:11px;">⚡</div>
       <div><div style="font-size:17px;font-weight:700;">TecnoKeko</div><div style="font-size:10px;color:var(--text3);font-family:'JetBrains Mono',monospace;">CONFIGURACIÓN INICIAL</div></div>
     </div>
-    <p style="font-size:13px;color:var(--text2);margin-bottom:20px;line-height:1.6;">Para sincronizar datos entre todos sus dispositivos, pegue aquí la URL del script de Google que instaló.</p>
+    <p style="font-size:13px;color:var(--text2);margin-bottom:20px;line-height:1.6;">Para sincronizar sus datos entre todos los dispositivos necesita una cuenta gratuita en JSONbin.io. Solo toma 2 minutos.</p>
     <div style="background:var(--bg3);border-radius:var(--radius-lg);padding:14px 16px;margin-bottom:18px;">
-      <div style="font-size:12px;font-weight:600;color:var(--text);margin-bottom:8px;">Si aún no tiene el script instalado:</div>
-      <div style="font-size:12px;color:var(--text2);line-height:1.7;">
-        1. Vaya a <a href="https://sheets.google.com" target="_blank" style="color:var(--accent);">sheets.google.com</a> → cree una hoja <strong style="color:var(--text);">"TecnoKeko Datos"</strong><br>
-        2. <strong style="color:var(--text);">Extensiones → Apps Script</strong> → pegue el contenido del archivo <code style="color:var(--amber);">.gs</code> → guarde<br>
-        3. <strong style="color:var(--text);">Implementar → Nueva implementación → Aplicación web</strong><br>
-        &nbsp;&nbsp;&nbsp;Ejecutar como: Yo · Acceso: Cualquier persona → Implementar<br>
-        4. Copie la URL que termina en <code style="color:var(--amber);">/exec</code>
+      <div style="font-size:12px;font-weight:600;color:var(--text);margin-bottom:8px;">Pasos para obtener su Master Key:</div>
+      <div style="font-size:12px;color:var(--text2);line-height:1.8;">
+        1. Vaya a <a href="https://jsonbin.io" target="_blank" style="color:var(--accent);">jsonbin.io</a> → haga clic en <strong style="color:var(--text);">Sign Up</strong> (gratis)<br>
+        2. Una vez dentro, haga clic en su perfil arriba a la derecha → <strong style="color:var(--text);">API Keys</strong><br>
+        3. Copie el valor de <strong style="color:var(--amber);">Secret Key</strong> (o Master Key)<br>
+        4. Péguelo abajo y presione <strong style="color:var(--text);">Guardar</strong>
       </div>
     </div>
     <div class="fg" style="margin-bottom:12px;">
-      <label class="flabel">URL del script (termina en /exec)</label>
-      <input type="text" id="setup-url" placeholder="https://script.google.com/macros/s/XXXX/exec" style="font-size:11px;font-family:'JetBrains Mono',monospace;">
+      <label class="flabel">Master Key / Secret Key de JSONbin.io</label>
+      <input type="text" id="setup-url" placeholder="$2a$10$..." style="font-size:12px;font-family:'JetBrains Mono',monospace;">
     </div>
     <button class="login-btn" id="setup-btn" onclick="guardarUrl()">Guardar y continuar</button>
     <div class="login-error" id="setup-error"></div>
@@ -639,8 +638,9 @@ tbody tr:hover td{background:var(--bg3);}
 // STATE
 // ═══════════════════════════════════════════════════════════
 let data = { articulos:[], ventas:[], nextId:1 };
-let session = { token:null, usuario:null };
-let apiUrl = null;
+let session = { usuario:null };
+let binId = null;
+let binKey = null;
 let saveTimer = null;
 let tipoVenta = 'cash';
 let modalPagoVentaId = null;
@@ -693,26 +693,36 @@ function setSync(s, msg) {
 // ═══════════════════════════════════════════════════════════
 // API CALLS
 // ═══════════════════════════════════════════════════════════
-async function apiGet(params={}) {
-  params.token = session.token;
-  const q = Object.entries(params).map(([k,v])=>`${k}=${encodeURIComponent(v)}`).join('&');
-  const r = await fetch(apiUrl+'?'+q, { redirect:'follow' });
-  const text = await r.text();
-  try { return JSON.parse(text); }
-  catch(e) { throw new Error('Respuesta inválida del servidor: '+text.slice(0,120)); }
+// JSONbin API
+async function binGet() {
+  const r = await fetch('https://api.jsonbin.io/v3/b/'+binId+'/latest', {
+    headers: { 'X-Master-Key': binKey }
+  });
+  const json = await r.json();
+  return json.record;
 }
 
-async function apiPost(body={}) {
-  body.token = session.token;
-  const r = await fetch(apiUrl, {
-    method:'POST',
-    redirect:'follow',
-    headers:{'Content-Type':'text/plain;charset=utf-8'},
-    body: JSON.stringify(body)
+async function binPut(record) {
+  const r = await fetch('https://api.jsonbin.io/v3/b/'+binId, {
+    method: 'PUT',
+    headers: { 'Content-Type':'application/json', 'X-Master-Key': binKey },
+    body: JSON.stringify(record)
   });
-  const text = await r.text();
-  try { return JSON.parse(text); }
-  catch(e) { throw new Error('Respuesta inválida del servidor: '+text.slice(0,120)); }
+  return r.ok;
+}
+
+async function binCreate(key) {
+  const initial = {
+    auth: { usuario:'admin', password:'tecnokeko2024' },
+    data: { articulos:[], ventas:[], nextId:1 }
+  };
+  const r = await fetch('https://api.jsonbin.io/v3/b', {
+    method: 'POST',
+    headers: { 'Content-Type':'application/json', 'X-Master-Key': key, 'X-Bin-Name':'TecnoKeko', 'X-Bin-Private':'true' },
+    body: JSON.stringify(initial)
+  });
+  const json = await r.json();
+  return json.metadata?.id || null;
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -752,10 +762,20 @@ async function doLogin() {
 }
 
 function reconfigurar() {
-  if(!confirm('¿Cambiar la URL del script de Google?\n\nSus datos en Google Sheets no se borran.')) return;
-  localStorage.removeItem('tk_api_url');
+  if(!confirm('¿Cambiar la configuración?\n\nSus datos en JSONbin NO se borran.')) return;
+  localStorage.removeItem('tk_bin_key');
+  localStorage.removeItem('tk_bin_id');
   localStorage.removeItem('tk_session');
   location.reload();
+}
+
+function enterApp(usuario) {
+  document.getElementById('login-screen').style.display='none';
+  document.getElementById('app').style.display='flex';
+  document.getElementById('user-name-display').textContent = usuario;
+  document.getElementById('user-avatar').textContent = (usuario||'A')[0].toUpperCase();
+  fillArticulosSelect(); renderAll();
+  setSync('synced');
 }
 
 function doLogout() {
@@ -783,34 +803,39 @@ async function cambiarPassword() {
 }
 
 // ═══════════════════════════════════════════════════════════
-// SETUP URL
+// SETUP JSONbin
 // ═══════════════════════════════════════════════════════════
 async function guardarUrl() {
-  const url = document.getElementById('setup-url').value.trim();
+  const key = document.getElementById('setup-url').value.trim();
   const errEl = document.getElementById('setup-error');
   const btn = document.getElementById('setup-btn');
-  if(!url||!url.includes('script.google.com')){
-    errEl.textContent='Pegue la URL completa del script (debe contener script.google.com).';
+  if(!key || key.length < 20){
+    errEl.textContent='Pegue su Master Key de JSONbin.io.';
     errEl.style.display='block'; return;
   }
   errEl.style.display='none';
-  btn.disabled=true; btn.textContent='Verificando…';
+  btn.disabled=true; btn.textContent='Configurando…';
   try {
-    const r = await fetch(url+'?action=ping', { redirect:'follow' });
-    const text = await r.text();
-    const json = JSON.parse(text);
-    if(!json.ok) throw new Error(json.error||'El script respondió con error.');
+    // check if we already have a binId saved
+    let savedBinId = localStorage.getItem('tk_bin_id');
+    if(!savedBinId) {
+      // create new bin
+      savedBinId = await binCreate(key);
+      if(!savedBinId) throw new Error('No se pudo crear el almacenamiento. Verifique su Master Key.');
+      localStorage.setItem('tk_bin_id', savedBinId);
+    }
+    binId = savedBinId;
+    binKey = key;
+    localStorage.setItem('tk_bin_key', key);
+    btn.disabled=false; btn.textContent='Guardar y continuar';
+    document.getElementById('setup-screen').style.display='none';
+    document.getElementById('login-screen').style.display='flex';
+    document.getElementById('login-hint').textContent='Usuario: admin · Contraseña: tecnokeko2024';
   } catch(e) {
     btn.disabled=false; btn.textContent='Guardar y continuar';
-    errEl.textContent='No se pudo conectar: '+e.message+'. Verifique que la URL es correcta y que el acceso es "Cualquier persona".';
-    errEl.style.display='block'; return;
+    errEl.textContent='Error: '+e.message;
+    errEl.style.display='block';
   }
-  apiUrl = url;
-  localStorage.setItem('tk_api_url', url);
-  btn.disabled=false; btn.textContent='Guardar y continuar';
-  document.getElementById('setup-screen').style.display='none';
-  document.getElementById('login-screen').style.display='flex';
-  document.getElementById('login-hint').textContent='Usuario: admin · Contraseña: tecnokeko2024';
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -819,9 +844,9 @@ async function guardarUrl() {
 async function cargarDatos() {
   setSync('syncing','Cargando…');
   try {
-    const res = await apiGet({ action:'load' });
-    if(res.ok && res.data && res.data.nextId) {
-      data = res.data;
+    const record = await binGet();
+    if(record && record.data && record.data.nextId) {
+      data = record.data;
       localStorage.setItem('tk_data_cache', JSON.stringify(data));
     } else {
       const cache = localStorage.getItem('tk_data_cache');
@@ -832,7 +857,7 @@ async function cargarDatos() {
     const cache = localStorage.getItem('tk_data_cache');
     if(cache) { try{ data=JSON.parse(cache); }catch(ee){} }
     setSync('offline');
-    toast('Sin conexión — mostrando datos locales.','info');
+    toast('Sin conexión — usando datos locales.','info');
   }
   fillArticulosSelect(); renderAll();
 }
@@ -843,18 +868,29 @@ function save() {
   setSync('syncing');
   saveTimer = setTimeout(async()=>{
     try {
-      await apiPost({ action:'save', data });
+      const record = await binGet();
+      record.data = data;
+      await binPut(record);
       setSync('synced');
     } catch(e){
       setSync('error');
-      toast('Error al guardar en la nube. Sus datos están seguros localmente.','error');
+      toast('Error al guardar. Datos seguros localmente.','error');
     }
-  }, 700);
+  }, 800);
 }
 
 async function sincronizar() {
-  await cargarDatos();
-  toast('Datos actualizados desde la nube.');
+  setSync('syncing','Cargando…');
+  try {
+    const record = await binGet();
+    if(record && record.data && record.data.nextId) {
+      data = record.data;
+      localStorage.setItem('tk_data_cache', JSON.stringify(data));
+      setSync('synced');
+      fillArticulosSelect(); renderAll();
+      toast('Datos actualizados.');
+    }
+  } catch(e) { setSync('offline'); toast('Sin conexión.','error'); }
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -1502,29 +1538,25 @@ function renderAll() {
   document.getElementById('cp-fecha').value=today();
   document.getElementById('v-fecha').value=today();
 
-  // check saved api url
-  const savedUrl=localStorage.getItem('tk_api_url');
-  if(!savedUrl){
+  const savedKey = localStorage.getItem('tk_bin_key');
+  const savedBinId = localStorage.getItem('tk_bin_id');
+
+  if(!savedKey || !savedBinId){
     document.getElementById('setup-screen').style.display='flex';
     document.getElementById('login-screen').style.display='none';
     return;
   }
-  apiUrl=savedUrl;
+  binKey = savedKey;
+  binId = savedBinId;
 
-  // check saved session
-  const savedSession=localStorage.getItem('tk_session');
+  const savedSession = localStorage.getItem('tk_session');
   if(savedSession){
     try{
-      session=JSON.parse(savedSession);
-      document.getElementById('login-screen').style.display='none';
-      document.getElementById('app').style.display='flex';
-      document.getElementById('user-name-display').textContent=session.usuario||'admin';
-      document.getElementById('user-avatar').textContent=(session.usuario||'A')[0].toUpperCase();
-      document.getElementById('login-hint').textContent='Usuario: admin · Contraseña: tecnokeko2024';
-      // load data from cache while fetching fresh
-      const cache=localStorage.getItem('tk_data_cache');
-      if(cache){ try{data=JSON.parse(cache);}catch(e){} fillArticulosSelect(); renderAll(); }
-      cargarDatos();
+      session = JSON.parse(savedSession);
+      const cache = localStorage.getItem('tk_data_cache');
+      if(cache){ try{data=JSON.parse(cache);}catch(e){} }
+      enterApp(session.usuario||'admin');
+      cargarDatos(); // refresh from cloud in background
     } catch(e){
       document.getElementById('login-screen').style.display='flex';
     }
