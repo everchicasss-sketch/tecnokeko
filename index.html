@@ -736,26 +736,23 @@ async function doLogin() {
   if(!usuario||!password){ errEl.textContent='Ingrese usuario y contraseña.'; errEl.style.display='block'; return; }
   btn.disabled=true; btn.textContent='Ingresando…'; errEl.style.display='none';
   try {
-    const res = await fetch(apiUrl, {
-      method:'POST', mode:'cors',
-      headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({ action:'login', usuario, password })
-    });
-    const json = await res.json();
-    if(json.ok) {
-      session = { token:json.token, usuario:json.usuario };
-      localStorage.setItem('tk_session', JSON.stringify(session));
-      document.getElementById('login-screen').style.display='none';
-      document.getElementById('app').style.display='flex';
-      document.getElementById('user-name-display').textContent = json.usuario;
-      document.getElementById('user-avatar').textContent = json.usuario[0].toUpperCase();
-      await cargarDatos();
-    } else {
-      errEl.textContent = json.error||'Error al ingresar.';
-      errEl.style.display = 'block';
+    const record = await binGet();
+    if(!record || !record.auth) throw new Error('No se pudo leer los datos.');
+    if(record.auth.usuario !== usuario || record.auth.password !== password) {
+      errEl.textContent='Usuario o contraseña incorrectos.';
+      errEl.style.display='block';
+      btn.disabled=false; btn.textContent='Ingresar';
+      return;
     }
+    session = { usuario };
+    localStorage.setItem('tk_session', JSON.stringify(session));
+    if(record.data && record.data.nextId) {
+      data = record.data;
+      localStorage.setItem('tk_data_cache', JSON.stringify(data));
+    }
+    enterApp(usuario);
   } catch(e) {
-    errEl.textContent = 'Error de conexión: '+e.message+'. Verifique la URL del script en ⚙ Reconfigurar.';
+    errEl.textContent = 'Error de conexión: '+e.message;
     errEl.style.display = 'block';
   }
   btn.disabled=false; btn.textContent='Ingresar';
