@@ -284,6 +284,11 @@ tbody tr:hover td{background:var(--bg3);}
       <label class="flabel">Master Key / Secret Key de JSONbin.io</label>
       <input type="text" id="setup-url" placeholder="$2a$10$..." style="font-size:12px;font-family:'JetBrains Mono',monospace;">
     </div>
+    <div class="fg" style="margin-bottom:14px;">
+      <label class="flabel">Bin ID <span style="color:var(--text3);font-weight:400;text-transform:none;">(solo si ya configuró en otro dispositivo)</span></label>
+      <input type="text" id="setup-binid" placeholder="Déjelo vacío si es la primera vez" style="font-size:12px;font-family:'JetBrains Mono',monospace;">
+      <span class="fhint">Encuentre su Bin ID en jsonbin.io → Bins. Empieza con números y letras.</span>
+    </div>
     <button class="login-btn" id="setup-btn" onclick="guardarUrl()">Guardar y continuar</button>
     <div class="login-error" id="setup-error"></div>
   </div>
@@ -791,12 +796,17 @@ async function cambiarPassword() {
   const conf = document.getElementById('cp-confirm').value;
   if(!oldP||!newP||!conf){ toast('Complete todos los campos.','error'); return; }
   if(newP!==conf){ toast('Las contraseñas no coinciden.','error'); return; }
-  if(newP.length<4){ toast('La contraseña debe tener al menos 4 caracteres.','error'); return; }
+  if(newP.length<4){ toast('Mínimo 4 caracteres.','error'); return; }
   try {
-    const res = await apiPost({ action:'change_password', oldPassword:oldP, newPassword:newP });
-    if(res.ok){ toast('Contraseña actualizada.'); closeModal('modal-password'); ['cp-old','cp-new','cp-confirm'].forEach(id=>document.getElementById(id).value=''); }
-    else toast(res.error||'Error al cambiar contraseña.','error');
-  } catch(e){ toast('Error de conexión.','error'); }
+    const record = await binGet();
+    if(!record||!record.auth){ toast('Error al leer datos.','error'); return; }
+    if(record.auth.password !== oldP){ toast('Contraseña actual incorrecta.','error'); return; }
+    record.auth.password = newP;
+    await binPut(record);
+    toast('Contraseña actualizada correctamente.');
+    closeModal('modal-password');
+    ['cp-old','cp-new','cp-confirm'].forEach(id=>document.getElementById(id).value='');
+  } catch(e){ toast('Error: '+e.message,'error'); }
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -813,16 +823,20 @@ async function guardarUrl() {
   errEl.style.display='none';
   btn.disabled=true; btn.textContent='Configurando…';
   try {
-    // check if we already have a binId saved
-    let savedBinId = localStorage.getItem('tk_bin_id');
+    // check if user provided a binId manually (second device)
+    const manualBinId = document.getElementById('setup-binid')?.value.trim();
+    let savedBinId = manualBinId || localStorage.getItem('tk_bin_id');
     if(!savedBinId) {
-      // create new bin
+      // first time - create new bin
       savedBinId = await binCreate(key);
       if(!savedBinId) throw new Error('No se pudo crear el almacenamiento. Verifique su Master Key.');
-      localStorage.setItem('tk_bin_id', savedBinId);
     }
+    // verify it works
     binId = savedBinId;
     binKey = key;
+    const testRecord = await binGet();
+    if(!testRecord) throw new Error('No se pudo leer el bin. Verifique su Master Key y Bin ID.');
+    localStorage.setItem('tk_bin_id', savedBinId);
     localStorage.setItem('tk_bin_key', key);
     btn.disabled=false; btn.textContent='Guardar y continuar';
     document.getElementById('setup-screen').style.display='none';
@@ -865,13 +879,18 @@ function save() {
   setSync('syncing');
   saveTimer = setTimeout(async()=>{
     try {
-      const record = await binGet();
-      record.data = data;
+      let record;
+      try { record = await binGet(); } catch(e) { record = null; }
+      if(!record || !record.auth) {
+        record = { auth:{ usuario:'admin', password:'tecnokeko2024' }, data };
+      } else {
+        record.data = data;
+      }
       await binPut(record);
       setSync('synced');
     } catch(e){
       setSync('error');
-      toast('Error al guardar. Datos seguros localmente.','error');
+      toast('Error al guardar en la nube. Sus datos están seguros localmente.','error');
     }
   }, 800);
 }
@@ -885,9 +904,12 @@ async function sincronizar() {
       localStorage.setItem('tk_data_cache', JSON.stringify(data));
       setSync('synced');
       fillArticulosSelect(); renderAll();
-      toast('Datos actualizados.');
+      toast('Datos actualizados desde la nube.');
+    } else {
+      setSync('synced');
+      toast('Sin datos nuevos.');
     }
-  } catch(e) { setSync('offline'); toast('Sin conexión.','error'); }
+  } catch(e) { setSync('offline'); toast('Sin conexión: '+e.message,'error'); }
 }
 
 // ═══════════════════════════════════════════════════════════
