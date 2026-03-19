@@ -527,6 +527,7 @@ tbody tr:hover td{background:var(--bg3);}
               <div class="tab active" id="tab-cash" onclick="setTipoVenta('cash')">💵 Contado</div>
               <div class="tab" id="tab-credito" onclick="setTipoVenta('credito')">💳 Crédito</div>
               <div class="tab" id="tab-tradein" onclick="setTipoVenta('tradein')">🔄 Trade-in</div>
+              <div class="tab" id="tab-tradein-credito" onclick="setTipoVenta('tradein-credito')">🔄💳 Trade-in + Crédito</div>
             </div>
             <div class="form-grid">
               <div class="fg fg-full"><label class="flabel">Artículo a vender</label><select id="v-articulo" onchange="updateVentaPreview()"></select></div>
@@ -582,6 +583,42 @@ tbody tr:hover td{background:var(--bg3);}
               </div>
               <div style="background:var(--teal-bg);border:1px solid rgba(45,212,191,.2);border-radius:var(--radius);padding:9px 13px;font-size:12px;color:var(--teal);">
                 ✓ El artículo recibido se agrega automáticamente al inventario para reventa.
+              </div>
+            </div>
+
+            <!-- TRADE-IN + CRÉDITO -->
+            <div id="tradein-credito-opts" style="display:none;">
+              <div class="divider"></div>
+              <div style="font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.07em;margin-bottom:12px;">Artículo recibido + saldo a crédito</div>
+              <div class="form-grid">
+                <div class="fg fg-full"><label class="flabel">Descripción del artículo recibido</label><input type="text" id="tic-nombre" placeholder="Ej: iPhone 12 64GB"></div>
+                <div class="fg"><label class="flabel">IMEI / Serie</label><input type="text" id="tic-imei" placeholder="Opcional"></div>
+                <div class="fg">
+                  <label class="flabel">Valor asignado al trade-in ($)</label>
+                  <input type="number" id="tic-valor" placeholder="0.00" min="0" step="0.01" value="0" oninput="updateVentaPreview()">
+                  <span class="fhint">Descuenta del precio de venta</span>
+                </div>
+                <div class="fg">
+                  <label class="flabel">Enganche adicional en efectivo ($)</label>
+                  <input type="number" id="tic-enganche" placeholder="0.00" min="0" step="0.01" value="0" oninput="updateVentaPreview()">
+                  <span class="fhint">Efectivo que paga hoy además del trade-in</span>
+                </div>
+                <div class="fg">
+                  <label class="flabel">Saldo a crédito ($)</label>
+                  <input type="number" id="tic-saldo" readonly style="color:var(--amber);opacity:.8;" placeholder="Se calcula solo">
+                  <span class="fhint">Precio − trade-in − enganche</span>
+                </div>
+                <div class="fg">
+                  <label class="flabel">Recargo ($)</label>
+                  <input type="number" id="tic-recargo" placeholder="0.00" min="0" step="0.01" value="0" oninput="updateVentaPreview()">
+                  <span class="fhint">Monto adicional opcional</span>
+                </div>
+              </div>
+              <div style="background:var(--teal-bg);border:1px solid rgba(45,212,191,.2);border-radius:var(--radius);padding:9px 13px;font-size:12px;color:var(--teal);margin-bottom:8px;">
+                ✓ El artículo recibido entra al inventario automáticamente.
+              </div>
+              <div style="background:var(--accent-glow);border:1px solid rgba(124,106,247,.2);border-radius:var(--radius);padding:9px 13px;font-size:12px;color:var(--accent);">
+                💡 El saldo pendiente se registra como crédito y aparece en la sección "Créditos" para cobros futuros.
               </div>
             </div>
 
@@ -942,9 +979,12 @@ function closeModal(id){ document.getElementById(id).style.display='none'; }
 // ═══════════════════════════════════════════════════════════
 function setTipoVenta(tipo) {
   tipoVenta=tipo;
-  ['cash','credito','tradein'].forEach(t=>document.getElementById('tab-'+t).classList.toggle('active',t===tipo));
-  document.getElementById('credito-opts').style.display = tipo==='credito'?'block':'none';
-  document.getElementById('tradein-opts').style.display  = tipo==='tradein'?'block':'none';
+  ['cash','credito','tradein','tradein-credito'].forEach(t=>{
+    const el=document.getElementById('tab-'+t); if(el) el.classList.toggle('active',t===tipo);
+  });
+  document.getElementById('credito-opts').style.display         = tipo==='credito'?'block':'none';
+  document.getElementById('tradein-opts').style.display         = tipo==='tradein'?'block':'none';
+  document.getElementById('tradein-credito-opts').style.display = tipo==='tradein-credito'?'block':'none';
   updateVentaPreview();
 }
 
@@ -1026,6 +1066,24 @@ function updateVentaPreview() {
       {l:'Costo artículo',v:fmtQ(costo),c:'red'},
       {l:'Ganancia',v:fmtQ(gan),c:gan>=0?'green':'red'},
       {l:'Margen',v:mar.toFixed(1)+'%',c:mar>=20?'green':mar>=5?'amber':'red'},
+    ];
+  } else if(tipoVenta==='tradein-credito') {
+    const ticValor   = parseFloat(document.getElementById('tic-valor').value)||0;
+    const ticEnganche= parseFloat(document.getElementById('tic-enganche').value)||0;
+    const ticRecargo = parseFloat(document.getElementById('tic-recargo').value)||0;
+    const ticSaldo   = Math.max(0, precio - ticValor - ticEnganche);
+    document.getElementById('tic-saldo').value = ticSaldo.toFixed(2);
+    const totalRecibir = precio + ticRecargo;
+    const gan = totalRecibir - costo;
+    items=[
+      {l:'Precio base',v:fmtQ(precio),c:'blue'},
+      {l:'Trade-in',v:fmtQ(ticValor),c:'teal'},
+      {l:'Enganche efectivo',v:fmtQ(ticEnganche),c:'green'},
+      {l:'Saldo a crédito',v:fmtQ(ticSaldo),c:'amber'},
+      {l:'Recargo',v:fmtQ(ticRecargo),c:'amber'},
+      {l:'Total a recibir',v:fmtQ(totalRecibir),c:'green'},
+      {l:'Costo artículo',v:fmtQ(costo),c:'red'},
+      {l:'Ganancia total',v:fmtQ(gan),c:gan>=0?'green':'red'},
     ];
   }
   box.classList.add('show');
@@ -1151,16 +1209,32 @@ function registrarVenta() {
     const totalRecibir=tiValor+tiEfectivo;
     v.tradein={ nombre:tiNombre, imei:tiImei, valor:tiValor, efectivo:tiEfectivo };
     v.totalRecibir=totalRecibir; v.ganancia=totalRecibir-costo;
-    // add to inventory
     data.articulos.push({ id:data.nextId++, nombre:tiNombre, categoria:art.categoria, estado:'trade-in', imei:tiImei, origen:'trade-in', precio:tiValor, impuesto:0, pventa:0, proveedor:cliente, fecha, notas:'Trade-in de '+cliente+' por: '+art.nombre, vendidoId:null });
+
+  } else if(tipoVenta==='tradein-credito') {
+    const ticNombre  =document.getElementById('tic-nombre').value.trim()||'Artículo trade-in';
+    const ticImei    =document.getElementById('tic-imei').value.trim();
+    const ticValor   =parseFloat(document.getElementById('tic-valor').value)||0;
+    const ticEnganche=parseFloat(document.getElementById('tic-enganche').value)||0;
+    const ticRecargo =parseFloat(document.getElementById('tic-recargo').value)||0;
+    const ticSaldo   =Math.max(0, precio - ticValor - ticEnganche);
+    const totalRecibir = precio + ticRecargo;
+    const pagoInicial = ticValor + ticEnganche;
+    v.tradein={ nombre:ticNombre, imei:ticImei, valor:ticValor, efectivo:ticEnganche };
+    v.credito={ enganche:pagoInicial, saldo:ticSaldo, recargo:ticRecargo, totalRecibir, pagos:[] };
+    let pagoId=1;
+    if(ticValor>0) v.credito.pagos.push({ id:pagoId++, monto:ticValor, fecha, nota:'Trade-in: '+ticNombre });
+    if(ticEnganche>0) v.credito.pagos.push({ id:pagoId++, monto:ticEnganche, fecha, nota:'Enganche en efectivo' });
+    v.totalRecibir=totalRecibir; v.ganancia=totalRecibir-costo;
+    data.articulos.push({ id:data.nextId++, nombre:ticNombre, categoria:art.categoria, estado:'trade-in', imei:ticImei, origen:'trade-in', precio:ticValor, impuesto:0, pventa:0, proveedor:cliente, fecha, notas:'Trade-in de '+cliente+' (venta a crédito de: '+art.nombre+')', vendidoId:null });
   }
 
   art.vendidoId=v.id;
   data.ventas.unshift(v);
   save(); fillArticulosSelect(); renderAll();
-  ['v-precio','v-cliente','v-nota','ti-nombre','ti-imei'].forEach(id=>document.getElementById(id).value='');
-  ['v-enganche','v-recargo','ti-valor'].forEach(id=>{const e=document.getElementById(id); if(e)e.value='0';});
-  ['v-saldo','ti-efectivo'].forEach(id=>{const e=document.getElementById(id); if(e)e.value='';});
+  ['v-precio','v-cliente','v-nota','ti-nombre','ti-imei','tic-nombre','tic-imei'].forEach(id=>{const e=document.getElementById(id); if(e)e.value='';});
+  ['v-enganche','v-recargo','ti-valor','tic-valor','tic-enganche','tic-recargo'].forEach(id=>{const e=document.getElementById(id); if(e)e.value='0';});
+  ['v-saldo','ti-efectivo','tic-saldo'].forEach(id=>{const e=document.getElementById(id); if(e)e.value='';});
   document.getElementById('v-preview').classList.remove('show');
   toast('Venta registrada — '+fmtQ(v.totalRecibir)+' | Ganancia: '+fmtQ(v.ganancia));
 }
@@ -1419,8 +1493,8 @@ function renderVentas() {
   document.getElementById('ventas-count').textContent=data.ventas.length;
   document.getElementById('ventas-tbody').innerHTML=data.ventas.map(v=>{
     const m=v.totalRecibir>0?v.ganancia/v.totalRecibir*100:0;
-    const tb=v.tipo==='cash'?'bg-green':v.tipo==='credito'?'bg-purple':'bg-teal';
-    const tl=v.tipo==='cash'?'Contado':v.tipo==='credito'?'Crédito':'Trade-in';
+    const tb=v.tipo==='cash'?'bg-green':v.tipo==='credito'?'bg-purple':v.tipo==='tradein-credito'?'bg-amber':'bg-teal';
+    const tl=v.tipo==='cash'?'Contado':v.tipo==='credito'?'Crédito':v.tipo==='tradein-credito'?'Trade-in+Crédito':'Trade-in';
     return `<tr>
       <td class="mono" style="color:var(--text3);white-space:nowrap;">${v.fecha}</td>
       <td style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:500;">${v.articuloNombre}</td>
@@ -1505,10 +1579,12 @@ function renderCostos() {
   const cash=data.ventas.filter(v=>v.tipo==='cash');
   const cred=data.ventas.filter(v=>v.tipo==='credito');
   const ti  =data.ventas.filter(v=>v.tipo==='tradein');
+  const tic =data.ventas.filter(v=>v.tipo==='tradein-credito');
   document.getElementById('estado-res').innerHTML=`
     <div class="arow"><span class="arow-label">Ventas contado (${cash.length})</span><span class="arow-value" style="color:var(--green);">${fmtQ(cash.reduce((s,v)=>s+v.totalRecibir,0))}</span></div>
     <div class="arow"><span class="arow-label">Ventas crédito (${cred.length})</span><span class="arow-value" style="color:var(--accent);">${fmtQ(cred.reduce((s,v)=>s+v.totalRecibir,0))}</span></div>
     <div class="arow"><span class="arow-label">Trade-in (${ti.length})</span><span class="arow-value" style="color:var(--teal);">${fmtQ(ti.reduce((s,v)=>s+v.totalRecibir,0))}</span></div>
+    <div class="arow"><span class="arow-label">Trade-in + Crédito (${tic.length})</span><span class="arow-value" style="color:var(--amber);">${fmtQ(tic.reduce((s,v)=>s+v.totalRecibir,0))}</span></div>
     <div class="arow" style="border-top:1px solid var(--border2);padding-top:12px;margin-top:2px;"><span style="font-weight:700;">Ingresos totales</span><span class="arow-value" style="color:var(--green);font-size:16px;">${fmtQ(tv)}</span></div>
     <div class="arow"><span class="arow-label">(-) COGS</span><span class="arow-value" style="color:var(--red);">(${fmtQ(cogs)})</span></div>
     <div class="arow"><span style="font-weight:700;">Ganancia bruta</span><span class="arow-value" style="color:${gan>=0?'var(--green)':'var(--red)'};font-size:16px;">${fmtQ(gan)}</span></div>
@@ -1534,7 +1610,7 @@ function renderCostos() {
     return `<tr>
       <td style="font-weight:500;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${v.articuloNombre}</td>
       <td class="mono" style="color:var(--text3);">${v.fecha}</td>
-      <td><span class="badge ${v.tipo==='cash'?'bg-green':v.tipo==='credito'?'bg-purple':'bg-teal'}">${v.tipo==='cash'?'Contado':v.tipo==='credito'?'Crédito':'Trade-in'}</span></td>
+      <td><span class="badge ${v.tipo==='cash'?'bg-green':v.tipo==='credito'?'bg-purple':v.tipo==='tradein-credito'?'bg-amber':'bg-teal'}">${v.tipo==='cash'?'Contado':v.tipo==='credito'?'Crédito':v.tipo==='tradein-credito'?'T+C':'Trade-in'}</span></td>
       <td class="tr mono" style="color:var(--red);">${fmtQ(v.costo)}</td>
       <td class="tr mono" style="color:var(--green);">${fmtQ(v.totalRecibir)}</td>
       <td class="tr mono" style="color:${v.ganancia>=0?'var(--green)':'var(--red)'};font-weight:700;">${fmtQ(v.ganancia)}</td>
