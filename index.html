@@ -11,16 +11,16 @@
 <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 :root{
-  --bg:#0a0a0f;--bg2:#111118;--bg3:#18181f;--bg4:#1e1e28;
-  --border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.13);
-  --text:#f0f0f8;--text2:#8888aa;--text3:#44445a;
-  --accent:#7c6af7;--accent2:#6355e0;--accent-glow:rgba(124,106,247,0.15);
-  --green:#3ddc84;--green-bg:rgba(61,220,132,0.1);
-  --red:#ff5f57;--red-bg:rgba(255,95,87,0.1);
-  --amber:#ffbe3d;--amber-bg:rgba(255,190,61,0.1);
-  --blue:#4fc3f7;--blue-bg:rgba(79,195,247,0.1);
-  --teal:#2dd4bf;--teal-bg:rgba(45,212,191,0.1);
-  --radius:8px;--radius-lg:14px;--shadow:0 4px 20px rgba(0,0,0,0.5);--shadow-lg:0 12px 40px rgba(0,0,0,0.6);
+  --bg:#f0f2f8;--bg2:#ffffff;--bg3:#f5f6fb;--bg4:#eaecf5;
+  --border:rgba(99,102,141,0.13);--border2:rgba(99,102,141,0.22);
+  --text:#1e1b4b;--text2:#6b7280;--text3:#9ca3af;
+  --accent:#6355e0;--accent2:#5046c8;--accent-glow:rgba(99,85,224,0.1);
+  --green:#059669;--green-bg:rgba(5,150,105,0.09);
+  --red:#dc2626;--red-bg:rgba(220,38,38,0.09);
+  --amber:#d97706;--amber-bg:rgba(217,119,6,0.09);
+  --blue:#2563eb;--blue-bg:rgba(37,99,235,0.09);
+  --teal:#0891b2;--teal-bg:rgba(8,145,178,0.09);
+  --radius:8px;--radius-lg:14px;--shadow:0 2px 10px rgba(99,102,141,0.1);--shadow-lg:0 8px 28px rgba(99,102,141,0.16);
 }
 *{box-sizing:border-box;margin:0;padding:0;}
 html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Sora',sans-serif;font-size:14px;line-height:1.6;-webkit-tap-highlight-color:transparent;}
@@ -228,8 +228,30 @@ tbody tr:hover td{background:var(--bg3);}
 
 /* SCROLLBAR */
 ::-webkit-scrollbar{width:5px;height:5px;}
-::-webkit-scrollbar-track{background:transparent;}
-::-webkit-scrollbar-thumb{background:var(--bg4);border-radius:3px;}
+::-webkit-scrollbar-track{background:var(--bg3);}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px;}
+
+/* LIGHT THEME */
+.sidebar{box-shadow:2px 0 10px rgba(99,102,141,0.1);}
+.topbar{box-shadow:0 1px 4px rgba(99,102,141,0.1);}
+.card{box-shadow:0 1px 6px rgba(99,102,141,0.09);}
+.metric{box-shadow:0 1px 4px rgba(99,102,141,0.09);}
+.login-box,.setup-box,.modal{box-shadow:0 8px 32px rgba(99,102,141,0.15);}
+.toast-success{background:#f0fdf4;color:var(--green);border-color:rgba(5,150,105,.3);}
+.toast-error{background:#fef2f2;color:var(--red);border-color:rgba(220,38,38,.3);}
+.toast-info{background:#f5f3ff;color:var(--accent);border-color:rgba(99,85,224,.3);}
+.login-screen,.setup-screen{background:linear-gradient(135deg,#eef2ff 0%,#faf5ff 60%,#e0f2fe 100%);}
+.nav-item.active{background:rgba(99,85,224,0.1);color:var(--accent);border-color:rgba(99,85,224,0.2);}
+.btn-primary{background:var(--accent2);border-color:var(--accent);color:#fff;}
+.badge.bg-green{background:rgba(5,150,105,0.12);color:var(--green);}
+.badge.bg-red{background:rgba(220,38,38,0.12);color:var(--red);}
+.badge.bg-amber{background:rgba(217,119,6,0.12);color:var(--amber);}
+.badge.bg-purple{background:rgba(99,85,224,0.12);color:var(--accent);}
+.badge.bg-teal{background:rgba(8,145,178,0.12);color:var(--teal);}
+.badge.bg-gray{background:var(--bg4);color:var(--text2);}
+.tag{background:var(--bg4);color:var(--text2);border-color:var(--border);}
+thead th{background:var(--bg3);}
+tbody tr:hover td{background:#f0f2fa;}
 </style>
 </head>
 <body>
@@ -444,10 +466,19 @@ tbody tr:hover td{background:var(--bg3);}
         <div class="card">
           <div class="card-header">
             <span class="card-title">Artículos en stock</span>
-            <select id="inv-filtro" onchange="renderInventario()" style="width:auto;padding:5px 10px;font-size:12px;">
-              <option value="">Todos</option><option value="nuevo">Nuevo</option>
-              <option value="usado">Usado</option><option value="trade-in">Trade-in</option>
-            </select>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;">
+              <select id="inv-filtro-disp" onchange="renderInventario()" style="width:auto;padding:5px 10px;font-size:12px;">
+                <option value="">Disponibles y vendidos</option>
+                <option value="disponible">Solo disponibles</option>
+                <option value="vendido">Solo vendidos</option>
+              </select>
+              <select id="inv-filtro" onchange="renderInventario()" style="width:auto;padding:5px 10px;font-size:12px;">
+                <option value="">Todos los estados</option>
+                <option value="nuevo">Nuevo</option>
+                <option value="usado">Usado</option>
+                <option value="trade-in">Trade-in</option>
+              </select>
+            </div>
           </div>
           <div class="table-wrap">
             <table>
@@ -1438,7 +1469,10 @@ function renderDashboard() {
 
 function renderInventario() {
   const filtro=document.getElementById('inv-filtro')?.value||'';
-  const arr=data.articulos.filter(a=>!filtro||a.estado===filtro);
+  const filtroDisp=document.getElementById('inv-filtro-disp')?.value||'';
+  let arr=data.articulos.filter(a=>!filtro||a.estado===filtro);
+  if(filtroDisp==='disponible') arr=arr.filter(a=>!a.vendidoId);
+  else if(filtroDisp==='vendido') arr=arr.filter(a=>a.vendidoId);
   const disp=arr.filter(a=>!a.vendidoId);
   const vend=arr.filter(a=>a.vendidoId);
   const val=disp.reduce((s,a)=>s+costoTotal(a),0);
